@@ -25,6 +25,9 @@ Upgrading from `rg-repo-explainer`: the plugin name changed, so uninstall the ol
 /ask deep what breaks if I change the Order status enum   # runs the agent on opus, asks you first
 /hulk what breaks if I change the Order status enum   # hero command: impact lens
 /drstrange what happens when a payment fails          # hero command: workflow lens
+/ironman how does the whole refund flow hold together       # opus, asks you first, ends with a systems check
+/hawkeye where is the retry logic                            # haiku, one to three lines, no report
+/thanos is anything unused in the billing module             # candidates for removal; never deletes
 /ask text where is the retry logic                  # no report
 /ask profile                                        # (re)build the saved repo profile
 /ask migrate                                        # move old loose reports into per-question folders
@@ -55,6 +58,14 @@ Each hero is `/ask` with the question type fixed and a default audience. Name an
 | `/drstrange` | workflow | dev |
 | `/blackwidow` | support | support |
 | `/hulk` | impact | dev |
+| `/thanos` | dead code: candidates for removal, never deletes | dev |
+| `/antman` | deep dive: one function, line by line | dev |
+| `/loki` | risk: hidden risks and tricks | dev |
+| `/ironman` | auto (detected as in `/ask`), opus after approval, ends with a systems check | dev |
+| `/hawkeye` | auto, haiku, one to three lines, no report | dev |
+| `/spiderman` | auto, plain language for a newcomer | pm |
+
+Presets (`type: auto`: ironman, hawkeye, spiderman) have no lens of their own; the question type is detected as in `/ask`. `/ask deep` is the same as `/ironman`.
 
 A hero is one file in `heroes/` (frontmatter plus the lens text) and one thin skill in `skills/<name>/`. The intro line is flavour only; it cannot change the rules or the read-only guarantee.
 

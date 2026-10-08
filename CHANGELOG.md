@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.0 - 2026-10-08
+
+### Added
+- Lens heroes: `/thanos` (candidates for removal: unused code, never deletes anything), `/antman` (one function, line by line) and `/loki` (hidden risks). Plain `/ask` also detects these three question types from conservative keywords; "safe to remove" still means impact, and everyday words such as "unreachable" (a server) or "unchecked" (a checkbox) are not triggers.
+- Preset heroes: `/ironman` (opus after your approval, ends with a systems check), `/hawkeye` (haiku, one to three lines, no report) and `/spiderman` (plain language for a newcomer). They have no lens of their own and detect the question type like `/ask`.
+- `engine/types.mjs`: the one list of question types, used by the report builder, the index, preflight and the router.
+- Report types `deadcode`, `deepdive` and `risk`, with labels and an entry in the index filter. Hero files may now say `type: auto`.
+
+### Changed
+- `/ask deep` is now documented as the same as `/ironman`.
+
+### Notes
+- Reports from earlier versions are unaffected. An unknown report type still builds as workflow with one warning.
+
 ## 1.2.0 - 2026-10-08
 
 ### Added
