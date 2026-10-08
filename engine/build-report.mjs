@@ -5,6 +5,8 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { REPORT_TYPES, TYPE_LABEL } from './types.mjs';
 import { scanSecrets } from './secrets.mjs';
+import { themeFor } from './themes.mjs';
+import { fileURLToPath } from 'node:url';
 
 const [, , inPath, outPath, ...flags] = process.argv;
 if (!inPath || !outPath) {
@@ -19,6 +21,9 @@ const AUDIENCE_LABEL = { dev: 'Developers', qa: 'QA', pm: 'Product', support: 'S
 const type = KNOWN_TYPES.includes(d.type) ? d.type : 'workflow';
 const audience = KNOWN_AUDIENCES.includes(d.audience) ? d.audience : 'dev';
 const startPlain = flags.includes('--plain') || audience !== 'dev';
+// optional per-hero look; null (no hero, unknown hero, missing or invalid theme) leaves the page exactly as it was
+const pluginDir = process.env.AVENGERS_PLUGIN_DIR ?? fileURLToPath(new URL('../', import.meta.url));
+const theme = themeFor(d.hero, pluginDir);
 
 // ---- secret scan: refuse to write a report that appears to contain a credential ----
 const secretHits = scanSecrets(d, '');
@@ -280,9 +285,9 @@ code{font:12.5px ui-monospace,Consolas,monospace;background:var(--card);padding:
 [data-view=plain] .dev-only,[data-view=dev] .plain-only{display:none}
 li{margin:3px 0}
 th{text-align:left;padding:7px 8px;border-bottom:2px solid var(--line);font-size:.85rem;color:var(--muted)}.tbl{overflow-x:auto}
-</style></head>
+</style>${theme ? theme.css : ''}</head>
 <body data-view="${startPlain ? 'plain' : 'dev'}"><main>
-<h1>${esc(d.title)}</h1>
+${theme ? theme.bandHtml.replace('{{TITLE}}', () => esc(d.title)) : `<h1>${esc(d.title)}</h1>`}
 <div class="meta">Question: ${esc(d.question)} &middot; Treated as: ${TYPE_LABEL[type]} question &middot; For: ${AUDIENCE_LABEL[audience]} &middot; Generated <span id="gen">${esc(d.generated ?? new Date().toISOString().slice(0, 10))}</span>${d.commit ? ` at commit <code>${esc(d.commit)}</code>` : ''} <span id="ago"></span></div>
 <div class="banner" id="age" hidden></div>
 ${stale}
