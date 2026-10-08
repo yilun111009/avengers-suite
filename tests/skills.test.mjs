@@ -83,3 +83,30 @@ test('hero skills pass the hero marker followed by the user arguments', () => {
 test('step 7 allows the hero model when deep is not set', () => {
   assert.match(ask, /pass no model \(or the hero's model in hero mode\)/);
 });
+
+const heroSection = () => ask.split('## Hero mode')[1].split('## Safety contract')[0];
+
+test('hero mode explains type auto: the router still picks the lens', () => {
+  assert.match(heroSection(), /`type: auto`/);
+  assert.match(heroSection(), /router's type/);
+});
+
+test('hero mode asks before spawning when approval is required, and Cancel stops', () => {
+  assert.match(heroSection(), /`approval: required`/);
+  assert.match(heroSection(), /Cancel/);
+});
+
+test('hero mode with report false writes no folder, even if the user typed report', () => {
+  assert.match(heroSection(), /writes no `docs\/flows\/<slug>\/` folder/);
+  assert.match(heroSection(), /even if the user typed `report`/);
+});
+
+test('/ask deep is documented as the same as /ironman', () => {
+  assert.match(ask, /`\/ask deep <question>`[^\n]*same as `\/ironman`/);
+});
+
+test('the hero command list in the usage section names all eleven', () => {
+  for (const n of ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk', 'thanos', 'antman', 'loki', 'ironman', 'hawkeye', 'spiderman']) {
+    assert.ok(ask.includes('`/' + n + '`'), `usage does not list /${n}`);
+  }
+});

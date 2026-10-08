@@ -9,8 +9,9 @@ Usage:
 - `/ask <question>`: answer + HTML report. The question type and the audience are detected from your wording.
 - `/ask for qa <question>` / `/ask explain to the PM <question>`: name the audience in the question and you are not asked.
 - `/ask plain <question>`: non-technical answer (treated as the PM audience)
-- `/ask deep <question>`: same answer and report, but the agent runs on the opus model for harder questions, after you approve it (default is the agent's own model, sonnet)
-- `/thor`, `/captainamerica`, `/drstrange`, `/blackwidow`, `/hulk` `<question>`: the same as `/ask`, with the question type fixed to the hero's lens and the hero's default audience
+- `/ask deep <question>`: same answer and report, but the agent runs on the opus model for harder questions, after you approve it (default is the agent's own model, sonnet). This is the same as `/ironman`.
+- `/thor`, `/captainamerica`, `/drstrange`, `/blackwidow`, `/hulk`, `/thanos`, `/antman`, `/loki` `<question>`: the same as `/ask`, with the question type fixed to the hero's lens and the hero's default audience
+- `/ironman`, `/hawkeye`, `/spiderman` `<question>`: presets with no lens of their own. The question type is detected as in `/ask`; the hero sets the model, audience and report mode (ironman: opus after approval; hawkeye: haiku, one to three lines, no report; spiderman: plain language for a newcomer)
 - `/ask text <question>`: answer only, no report
 - `/ask onboard` / `/ask onboard --force`: run (or redo) onboarding only
 - `/ask profile`: rebuild the repo profile only
@@ -18,14 +19,17 @@ Usage:
 
 ## Hero mode
 
-A hero skill (`/thor`, `/captainamerica`, `/drstrange`, `/blackwidow`, `/hulk`) invokes this skill so that the arguments start with `hero: <name>` followed by the user's own words. In hero mode:
+A hero skill (`/thor`, `/captainamerica`, `/drstrange`, `/blackwidow`, `/hulk`, `/thanos`, `/antman`, `/loki`, `/ironman`, `/hawkeye`, `/spiderman`) invokes this skill so that the arguments start with `hero: <name>` followed by the user's own words. In hero mode:
 1. Remove that token first, then run step 1 (keywords) and the router on the rest, so that a leading `for qa` or `plain` is still seen as the user's own words.
-2. Read `<plugin dir>/heroes/<name>.md`. Print its `intro` line first. Its `type`, `audience`, `model`, `report` and `approval` replace the detected defaults.
-3. Skip the type detection in step 4. Still run the router for the audience only: a named audience in the question (for example `/hulk for qa ...`) wins over the hero's default audience. When the hero file sets an audience and none is named, use it and do not ask the audience question.
+2. Read `<plugin dir>/heroes/<name>.md`. Print its `intro` line first. Its `type` (unless it is `auto`, see item 7), `audience`, `model`, `report` and `approval` replace the detected defaults.
+3. For a lens hero, skip the type detection in step 4 (the hero's `type` is the type); for a `type: auto` hero, use the router's type. Either way still run the router for the audience: a named audience in the question (for example `/hulk for qa ...`) wins over the hero's default audience. When the hero file sets an audience and none is named, use it and do not ask the audience question.
 4. Pass the hero's `model` on the Agent call. If `approval: required`, ask for approval first, exactly as for `deep` in step 7.
 5. `report: false` means the same as `text`.
 6. The user's keywords win over the hero's defaults: `plain` gives `pm` unless an audience is named, `text` gives no report, and `deep` triggers the step 7 opus approval instead of the hero's model.
-7. Everything else (preflight, onboarding, context, report, index) is unchanged. The `Treated as:` line gains the hero's name: `Treated as: <type> question, for <audience> (<name>).`
+7. With `type: auto` (ironman, hawkeye, spiderman) the hero has no lens of its own: keep the router's type, and use the hero file for that type in step 5. The hero's own text after its frontmatter is added to the prompt after the `LENS:` block, under a line `HERO:`.
+8. With `approval: required` (ironman), ask for approval before spawning anything: one question with three choices, `Use opus`, `Use the default model instead`, `Cancel`, exactly as for `deep` in step 7. On `Cancel`, stop; nothing runs and nothing is written.
+9. With `report: false` (hawkeye) step 9 is skipped: the skill writes no `docs/flows/<slug>/` folder, even if the user typed `report`. Print the agent's answer and stop.
+10. Everything else (preflight, onboarding, context, report, index) is unchanged. The `Treated as:` line gains the hero's name: `Treated as: <type> question, for <audience> (<name>).`
 
 ## Safety contract (read first)
 
@@ -82,7 +86,7 @@ You prepare facts the agent cannot fetch itself:
 - Include the repo profile text and the hints text (`.claude/avengers-hints.md`, else `.claude/explainer-hints.md`, if present).
 
 ### 7. Ask the agent (one run)
-Spawn the `repo-avengers` agent with: `task: explain`, `type`, `alsoMatches` (or none), `audience`, `report`, the question verbatim, the context block, then the hero file text after its frontmatter under a line `LENS:` and the audience file text under a line `AUDIENCE:`. If `deep: true`, first ask the user to approve opus (it is slower and costs more): one question with three choices, `Use opus`, `Use the default model instead`, `Cancel`. Do not spawn the agent until they answer. On `Use opus`, pass `model: "opus"` on the Agent call for this one run. On `Use the default model instead`, pass no model and say so in one line. On `Cancel`, stop. If `deep` is not set, pass no model (or the hero's model in hero mode) and do not ask. Remind it in the prompt that it is read-only and must not quote secrets. Do not run the agent a second time to rewrite the answer for another audience.
+Spawn the `repo-avengers` agent with: `task: explain`, `type`, `alsoMatches` (or none), `audience`, `report`, the question verbatim, the context block, then the hero file text after its frontmatter under a line `LENS:` and the audience file text under a line `AUDIENCE:`. If `deep: true`, first ask the user to approve opus (it is slower and costs more): one question with three choices, `Use opus`, `Use the default model instead`, `Cancel`. Do not spawn the agent until they answer. On `Use opus`, pass `model: "opus"` on the Agent call for this one run. On `Use the default model instead`, pass no model and say so in one line. On `Cancel`, stop. If `deep` is not set, pass no model (or the hero's model in hero mode) and do not ask. Treat `deep` exactly as `/ironman`: the same approval question, the same model. Remind it in the prompt that it is read-only and must not quote secrets. Do not run the agent a second time to rewrite the answer for another audience.
 
 ### 8. Relay
 Relay the prose answer. Keep citations, "Things worth flagging" and the confidence section. If `graphStale` is true, say so and suggest `/graphify <src> --update`.
