@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const script = fileURLToPath(new URL('../engine/check-onboarding.mjs', import.meta.url));
-const LENSES = ['architecture', 'logic', 'workflow', 'support', 'impact'];
+const HEROES = ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk'];
+const TYPE_OF = { thor: 'architecture', captainamerica: 'logic', drstrange: 'workflow', blackwidow: 'support', hulk: 'impact' };
 const AUDIENCES = ['dev', 'qa', 'pm', 'support'];
 const SAFE = '# Prompt file\n\nLook at the code and describe what you find.\n';
 
@@ -16,16 +17,29 @@ function makeRepo() {
   writeFileSync(join(d, 'app.js'), 'export {}\n');
   return d;
 }
-// overrides: { 'lenses/logic': 'text' } replaces a file; a null value leaves the file out
-function makeAsk(overrides = {}) {
-  const d = mkdtempSync(join(tmpdir(), 'avengers-ask-'));
-  const all = [...LENSES.map((n) => ['lenses', n]), ...AUDIENCES.map((n) => ['audiences', n])];
-  for (const [dir, name] of all) {
-    const key = `${dir}/${name}`;
-    const text = key in overrides ? overrides[key] : SAFE;
-    if (text === null) continue;
-    mkdirSync(join(d, dir), { recursive: true });
-    writeFileSync(join(d, dir, `${name}.md`), text);
+function heroText(name, body = SAFE) {
+  return ['---', `name: ${name}`, `command: /${name}`, `type: ${TYPE_OF[name]}`, 'audience: dev', 'model: sonnet', 'report: true', 'approval: none', 'intro: "Ready."', '---', body].join('\n');
+}
+// overrides: { 'heroes/hulk': 'text' } replaces a file; a null value leaves it out;
+// { 'skills/stray': 'text' } adds a skill folder that has no hero.
+function makePlugin(overrides = {}) {
+  const d = mkdtempSync(join(tmpdir(), 'avengers-plugin-'));
+  const put = (rel, text) => { mkdirSync(join(d, dirname(rel)), { recursive: true }); writeFileSync(join(d, rel), text); };
+  for (const n of HEROES) {
+    const hk = `heroes/${n}`;
+    const ht = hk in overrides ? overrides[hk] : heroText(n);
+    if (ht !== null) put(`${hk}.md`, ht);
+    const sk = `skills/${n}`;
+    const st = sk in overrides ? overrides[sk] : '# thin skill\n';
+    if (st !== null) put(`${sk}/SKILL.md`, st);
+  }
+  for (const n of AUDIENCES) {
+    const ak = `audiences/${n}`;
+    const at = ak in overrides ? overrides[ak] : SAFE;
+    if (at !== null) put(`${ak}.md`, at);
+  }
+  for (const k of Object.keys(overrides)) {
+    if (k.startsWith('skills/') && !HEROES.some((h) => k === `skills/${h}`)) put(`${k}/SKILL.md`, overrides[k]);
   }
   return d;
 }
@@ -35,10 +49,10 @@ function makeAgent(tools, eol = '\n') {
   writeFileSync(p, ['---', 'name: x', `tools: ${tools}`, '---', 'body', ''].join(eol));
   return p;
 }
-function preflight({ repo = makeRepo(), ask = makeAsk(), agent = makeAgent('Read, Grep, Glob') } = {}) {
+function preflight({ repo = makeRepo(), plugin = makePlugin(), agent = makeAgent('Read, Grep, Glob') } = {}) {
   const r = spawnSync(process.execPath, [script, 'preflight'], {
     cwd: repo,
-    env: { ...process.env, AVENGERS_AGENT_PATH: agent, AVENGERS_ASK_DIR: ask },
+    env: { ...process.env, AVENGERS_AGENT_PATH: agent, AVENGERS_PLUGIN_DIR: plugin },
     encoding: 'utf8',
   });
   return JSON.parse(r.stdout);
@@ -74,28 +88,63 @@ test('preflight fails on a project-level agent copy with the new name', () => {
   assert.ok(ids(preflight({ repo })).includes('shadowing-agent'));
 });
 
-test('preflight fails when a lens names a tool, and says which file', () => {
-  const r = preflight({ ask: makeAsk({ 'lenses/logic': '# Lens\n\nUse Bash to list the files.\n' }) });
-  const f = r.failures.find((x) => x.id === 'lens-unsafe');
+test('preflight fails when a hero names a tool, and says which file', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/captainamerica': heroText('captainamerica', '# Lens\n\nUse Bash to list the files.\n') }) });
+  const f = r.failures.find((x) => x.id === 'prompt-unsafe');
   assert.ok(f, JSON.stringify(r.failures));
-  assert.match(f.problem, /lenses[\\/]logic\.md/);
+  assert.match(f.problem, /heroes[\\/]captainamerica\.md/);
 });
 
 test('preflight fails when an audience tells the agent to run something', () => {
-  const r = preflight({ ask: makeAsk({ 'audiences/qa': '# Audience\n\nThen run the command and show the output.\n' }) });
-  assert.ok(ids(r).includes('lens-unsafe'));
+  const r = preflight({ plugin: makePlugin({ 'audiences/qa': '# Audience\n\nThen run the command and show the output.\n' }) });
+  assert.ok(ids(r).includes('prompt-unsafe'));
 });
 
 test('preflight fails when a prompt file tells the agent to change files', () => {
-  const r = preflight({ ask: makeAsk({ 'lenses/impact': '# Lens\n\nAlso delete the old file.\n' }) });
-  assert.ok(ids(r).includes('lens-unsafe'));
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk', '# Lens\n\nAlso delete the old file.\n') }) });
+  assert.ok(ids(r).includes('prompt-unsafe'));
 });
 
-test('preflight fails when a lens file is missing, and names the path', () => {
-  const r = preflight({ ask: makeAsk({ 'lenses/impact': null }) });
-  const f = r.failures.find((x) => x.id === 'lens-missing');
+test('preflight fails when a core hero file is missing, and names the path', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': null }) });
+  const f = r.failures.find((x) => x.id === 'prompt-missing');
   assert.ok(f, JSON.stringify(r.failures));
-  assert.match(f.problem, /impact\.md/);
+  assert.match(f.problem, /hulk\.md/);
+});
+
+test('preflight accepts a hero file with Windows line endings', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace(/\n/g, '\r\n') }) });
+  assert.equal(r.ok, true, JSON.stringify(r.failures));
+});
+
+test('preflight accepts a hero intro that contains a colon and a comma', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('intro: "Ready."', 'intro: "Hulk smash: checking, now."') }) });
+  assert.equal(r.ok, true, JSON.stringify(r.failures));
+});
+
+test('preflight fails on a hero with an unknown model, and names the file', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('model: sonnet', 'model: gpt') }) });
+  const f = r.failures.find((x) => x.id === 'hero-invalid');
+  assert.ok(f, JSON.stringify(r.failures));
+  assert.match(f.problem, /hulk\.md/);
+  assert.match(f.problem, /model/);
+});
+
+test('preflight fails on a hero with an unknown type', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('type: impact', 'type: nonsense') }) });
+  assert.ok(ids(r).includes('hero-invalid'));
+});
+
+test('preflight fails when the hero frontmatter name does not match the file name', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('name: hulk', 'name: thanos') }) });
+  const f = r.failures.find((x) => x.id === 'hero-invalid');
+  assert.ok(f, JSON.stringify(r.failures));
+  assert.match(f.problem, /name/);
+});
+
+test('preflight fails when a hero file has no frontmatter', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': '# Lens: impact\n\nNo frontmatter here.\n' }) });
+  assert.ok(ids(r).includes('hero-invalid'));
 });
 
 test('hints: either filename counts, none does not', () => {

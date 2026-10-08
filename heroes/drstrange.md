@@ -1,3 +1,13 @@
+---
+name: drstrange
+command: /drstrange
+type: workflow
+audience: dev
+model: sonnet
+report: true
+approval: none
+intro: "Doctor Strange is viewing every path this request can take..."
+---
 # Lens: workflow
 
 The question is about what happens from one point to another, in order, and who or what does each step.

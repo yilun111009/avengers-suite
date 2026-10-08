@@ -1,3 +1,13 @@
+---
+name: captainamerica
+command: /captainamerica
+type: logic
+audience: dev
+model: sonnet
+report: true
+approval: none
+intro: "Captain America is checking the rules..."
+---
 # Lens: logic
 
 The question is about the rules: when something happens, what is allowed, and why something is refused.

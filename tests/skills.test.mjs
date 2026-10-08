@@ -9,7 +9,7 @@ const explain = read('skills/explain/SKILL.md');
 
 test('ask skill is named ask and points at the router, lenses, audiences and agent', () => {
   assert.match(ask, /^---\nname: ask\n/);
-  for (const needle of ['detect-route.mjs', 'lenses/', 'audiences/', 'repo-avengers', 'avengers-hints.md', 'explainer-hints.md', 'Treated as:']) {
+  for (const needle of ['detect-route.mjs', 'heroes/', 'audiences/', 'repo-avengers', 'avengers-hints.md', 'explainer-hints.md', 'Treated as:']) {
     assert.ok(ask.includes(needle), `ask SKILL.md does not mention ${needle}`);
   }
 });

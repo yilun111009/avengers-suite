@@ -29,7 +29,7 @@ Strip leading words `plain`, `text`, `report`, `deep` (any order). `report: true
 
 ### 2. Preflight (every run, fast, mechanical)
 Run from the repo root: `node "<scripts dir>/check-onboarding.mjs" preflight`.
-- If `ok` is false: **stop.** Show each failure with its fix. Do not call the agent. Common ones: a project-level `.claude/agents/*explainer*` or `*avengers*` copy that could shadow the plugin agent (delete it); a missing or unsafe lens/audience file (the failure names the file).
+- If `ok` is false: **stop.** Show each failure with its fix. Do not call the agent. Common ones: a project-level `.claude/agents/*explainer*` or `*avengers*` copy that could shadow the plugin agent (delete it); a missing, invalid or unsafe hero or audience file (the failure names the file).
 - If `node` itself is missing: report text-only mode is still possible, but preflight cannot run; ask the user whether to continue without checks. Do not silently skip.
 - Show warnings once in a single short line each (gitignore, no README, no graph, not a git repo). Do not stop for warnings.
 - Remember `info` (graphDate, lastCommit, graphStale, hasProfile, hasOnboardingRecord, hasHints) for the context block.
@@ -60,8 +60,8 @@ Audience:
 
 Tell the user, in one line before the answer: `Treated as: <type> question, for <audience>.` Add `(couldn't tell, using workflow)` when `unclear` is true, and `also touches <alsoMatches>` when it is not null, so they can correct it.
 
-### 5. Load the lens and the audience
-Read `<ask dir>/lenses/<type>.md` and `<ask dir>/audiences/<audience>.md`. If either file is missing, stop and name the exact path. Never continue with a blank prompt: that would silently drop the format rules.
+### 5. Load the hero prompt and the audience
+Read the hero file in `<plugin dir>/heroes/` whose `type:` equals the detected type (architecture is `thor.md`, logic is `captainamerica.md`, workflow is `drstrange.md`, support is `blackwidow.md`, impact is `hulk.md`) and `<plugin dir>/audiences/<audience>.md`. Use the hero file text after its closing `---` line as the lens. If either file is missing, stop and name the exact path. Never continue with a blank prompt: that would silently drop the format rules.
 
 ### 6. Build the context block for the agent
 You prepare facts the agent cannot fetch itself:
@@ -70,7 +70,7 @@ You prepare facts the agent cannot fetch itself:
 - Include the repo profile text and the hints text (`.claude/avengers-hints.md`, else `.claude/explainer-hints.md`, if present).
 
 ### 7. Ask the agent (one run)
-Spawn the `repo-avengers` agent with: `task: explain`, `type`, `alsoMatches` (or none), `audience`, `report`, the question verbatim, the context block, then the lens file text under a line `LENS:` and the audience file text under a line `AUDIENCE:`. If `deep: true`, first ask the user to approve opus (it is slower and costs more): one question with three choices, `Use opus`, `Use the default model instead`, `Cancel`. Do not spawn the agent until they answer. On `Use opus`, pass `model: "opus"` on the Agent call for this one run. On `Use the default model instead`, pass no model and say so in one line. On `Cancel`, stop. If `deep` is not set, pass no model and do not ask. Remind it in the prompt that it is read-only and must not quote secrets. Do not run the agent a second time to rewrite the answer for another audience.
+Spawn the `repo-avengers` agent with: `task: explain`, `type`, `alsoMatches` (or none), `audience`, `report`, the question verbatim, the context block, then the hero file text after its frontmatter under a line `LENS:` and the audience file text under a line `AUDIENCE:`. If `deep: true`, first ask the user to approve opus (it is slower and costs more): one question with three choices, `Use opus`, `Use the default model instead`, `Cancel`. Do not spawn the agent until they answer. On `Use opus`, pass `model: "opus"` on the Agent call for this one run. On `Use the default model instead`, pass no model and say so in one line. On `Cancel`, stop. If `deep` is not set, pass no model and do not ask. Remind it in the prompt that it is read-only and must not quote secrets. Do not run the agent a second time to rewrite the answer for another audience.
 
 ### 8. Relay
 Relay the prose answer. Keep citations, "Things worth flagging" and the confidence section. If `graphStale` is true, say so and suggest `/graphify <src> --update`.
