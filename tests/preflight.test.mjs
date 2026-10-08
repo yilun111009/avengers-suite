@@ -207,3 +207,28 @@ test('the wrong-name failure names the file as well as the field', () => {
   const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('name: hulk', 'name: thanos') }) });
   assert.match(r.failures.find((x) => x.id === 'hero-invalid').problem, /heroes\/hulk\.md/);
 });
+
+test('preflight accepts a hero whose type is auto', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('type: impact', 'type: auto') }) });
+  assert.equal(r.ok, true, JSON.stringify(r.failures));
+});
+
+test('preflight accepts the three new lens types in a hero file', () => {
+  for (const t of ['deadcode', 'deepdive', 'risk']) {
+    const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('type: impact', `type: ${t}`) }) });
+    assert.equal(r.ok, true, `${t}: ${JSON.stringify(r.failures)}`);
+  }
+});
+
+test('preflight still rejects a made-up hero type, and lists auto among the choices', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('type: impact', 'type: banana') }) });
+  const f = r.failures.find((x) => x.id === 'hero-invalid');
+  assert.ok(f, JSON.stringify(r.failures));
+  assert.match(f.problem, /auto/);
+});
+
+test('an auto hero is still scanned for unsafe wording', () => {
+  const text = heroText('hulk', '# Preset\n\nThen delete the old file.\n').replace('type: impact', 'type: auto');
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': text }) });
+  assert.ok(ids(r).includes('prompt-unsafe'));
+});
