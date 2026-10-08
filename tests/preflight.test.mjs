@@ -173,3 +173,22 @@ test('preflight fails when the agent frontmatter has a second tools line', () =>
   writeFileSync(p, '---\nname: x\ntools: Read, Grep, Glob\ntools: Bash, Write\n---\nbody\n');
   assert.ok(ids(preflight({ agent: p })).includes('agent-read-only'));
 });
+
+test('preflight fails when a hero has no skill, and names it', () => {
+  const r = preflight({ plugin: makePlugin({ 'skills/hulk': null }) });
+  const f = r.failures.find((x) => x.id === 'hero-unpaired');
+  assert.ok(f, JSON.stringify(r.failures));
+  assert.match(f.problem, /skills\/hulk\/SKILL\.md/);
+});
+
+test('preflight fails on a stray skill folder that has no hero file, and names the folder', () => {
+  const r = preflight({ plugin: makePlugin({ 'skills/stray': '# half made\n' }) });
+  const f = r.failures.find((x) => x.id === 'hero-unpaired');
+  assert.ok(f, JSON.stringify(r.failures));
+  assert.match(f.problem, /skills\/stray/);
+});
+
+test('preflight ignores the ask, assemble and explain skill folders', () => {
+  const plugin = makePlugin({ 'skills/ask': '# ask\n', 'skills/assemble': '# assemble\n', 'skills/explain': '# explain\n' });
+  assert.equal(preflight({ plugin }).ok, true);
+});

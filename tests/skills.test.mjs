@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const read = (p) => readFileSync(fileURLToPath(new URL(`../${p}`, import.meta.url)), 'utf8');
@@ -41,4 +41,24 @@ test('ask skill supports deep, which runs the agent on opus', () => {
 test('ask skill asks the user to approve opus before a deep run', () => {
   assert.match(ask, /ask the user to approve opus/);
   assert.match(ask, /Do not spawn the agent until they answer/);
+});
+
+const heroNames = readdirSync(fileURLToPath(new URL('../heroes/', import.meta.url))).filter((f) => f.endsWith('.md')).map((f) => f.slice(0, -3));
+
+test('every hero has a thin skill that calls ask in hero mode', () => {
+  assert.ok(heroNames.length >= 5);
+  for (const n of heroNames) {
+    const s = read(`skills/${n}/SKILL.md`).replace(/\r\n/g, '\n');
+    assert.match(s, new RegExp(`^---\nname: ${n}\n`), `${n} skill name`);
+    assert.ok(s.includes(`hero: ${n}`), `${n} skill must pass hero: ${n}`);
+    assert.ok(s.includes(`Trigger: /${n}`), `${n} skill description must end with its trigger`);
+    assert.ok(s.split('\n').length < 16, `${n} skill should stay thin`);
+  }
+});
+
+test('ask skill documents hero mode, and a named audience still wins', () => {
+  assert.match(ask, /## Hero mode/);
+  assert.match(ask, /`hero: <name>`/);
+  assert.match(ask, /named audience in the question/);
+  assert.ok(ask.includes('heroes/<name>.md'));
 });

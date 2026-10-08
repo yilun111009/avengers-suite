@@ -10,10 +10,20 @@ Usage:
 - `/ask for qa <question>` / `/ask explain to the PM <question>`: name the audience in the question and you are not asked.
 - `/ask plain <question>`: non-technical answer (treated as the PM audience)
 - `/ask deep <question>`: same answer and report, but the agent runs on the opus model for harder questions, after you approve it (default is the agent's own model, sonnet)
+- `/thor`, `/captainamerica`, `/drstrange`, `/blackwidow`, `/hulk` `<question>`: the same as `/ask`, with the question type fixed to the hero's lens and the hero's default audience
 - `/ask text <question>`: answer only, no report
 - `/ask onboard` / `/ask onboard --force`: run (or redo) onboarding only
 - `/ask profile`: rebuild the repo profile only
 - `/ask migrate`: move old loose reports (`docs/flows/<slug>.html/.json`) into per-question folders
+
+## Hero mode
+
+A hero skill (`/thor`, `/captainamerica`, `/drstrange`, `/blackwidow`, `/hulk`) invokes this skill with `hero: <name>`. In hero mode:
+1. Read `<plugin dir>/heroes/<name>.md`. Print its `intro` line first. Its `type`, `audience`, `model`, `report` and `approval` replace the detected defaults.
+2. Skip the type detection in step 4. Still run the router for the audience only: a named audience in the question (for example `/hulk for qa ...`) wins over the hero's default audience. When the hero file sets an audience and none is named, use it and do not ask the audience question.
+3. Pass the hero's `model` on the Agent call. If `approval: required`, ask for approval first, exactly as for `deep` in step 7.
+4. `report: false` means the same as `text`.
+5. Everything else (preflight, onboarding, context, report, index) is unchanged. The `Treated as:` line gains the hero's name: `Treated as: <type> question, for <audience> (<name>).`
 
 ## Safety contract (read first)
 

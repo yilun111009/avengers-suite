@@ -20,6 +20,7 @@ const pluginDir = process.env.AVENGERS_PLUGIN_DIR ?? fileURLToPath(new URL('../'
 const CORE_HEROES = ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk'];
 const KNOWN_TYPES = ['architecture', 'logic', 'workflow', 'support', 'impact'];
 const MODELS = ['sonnet', 'opus', 'haiku'];
+const NON_HERO_SKILLS = new Set(['ask', 'assemble', 'explain']);
 const AUDIENCES = ['dev', 'qa', 'pm', 'support'];
 const ALLOWED_TOOLS = new Set(['Read', 'Grep', 'Glob']);
 const SRC_EXT = /\.(cs|ts|tsx|js|jsx|mjs|py|java|kt|go|rs|rb|php|swift|scala|c|cc|cpp|h|sql|vue|svelte)$/i;
@@ -94,6 +95,21 @@ function heroProblems(name, text) {
   return bad.length ? [{ id: 'hero-invalid', problem: `${file} has invalid frontmatter: ${bad.join('; ')}.`, fix }] : [];
 }
 
+// every hero needs a skill (or /<hero> would not exist) and every skill folder except the known non-hero ones needs a hero
+function pairingProblems() {
+  const found = [];
+  const skillsDir = join(pluginDir, 'skills');
+  if (!existsSync(skillsDir)) return found;
+  const heroes = heroFiles();
+  for (const name of heroes) {
+    if (!existsSync(join(skillsDir, name, 'SKILL.md'))) found.push({ id: 'hero-unpaired', problem: `heroes/${name}.md has no skills/${name}/SKILL.md, so /${name} would not exist.`, fix: `Add skills/${name}/SKILL.md (copy a thin hero skill) or remove heroes/${name}.md.` });
+  }
+  for (const d of readdirSync(skillsDir, { withFileTypes: true })) {
+    if (d.isDirectory() && !NON_HERO_SKILLS.has(d.name) && !heroes.includes(d.name)) found.push({ id: 'hero-unpaired', problem: `skills/${d.name}/ has no heroes/${d.name}.md.`, fix: `Add heroes/${d.name}.md or remove skills/${d.name}/.` });
+  }
+  return found;
+}
+
 function promptProblems() {
   const found = [];
   const expected = [...heroFiles().map((n) => ['heroes', n]), ...AUDIENCES.map((n) => ['audiences', n])];
@@ -109,6 +125,7 @@ function promptProblems() {
     }
     if (dir === 'heroes') found.push(...heroProblems(name, text));
   }
+  found.push(...pairingProblems());
   return found;
 }
 
