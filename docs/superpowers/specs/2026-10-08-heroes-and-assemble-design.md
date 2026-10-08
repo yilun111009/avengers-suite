@@ -15,7 +15,7 @@ Success means:
 
 ### Out of scope (future phases)
 - A write-capable team (writing docs, fixing code, opening PRs). It needs a second agent with write tools, its own approval gates, and a change to the read-only guarantee.
-- Parallel `/ask` without a plan step.
+- Parallel `/ask` without a plan step. `/assemble` shipped in 1.4.0 as a single plan, approve, run, merge flow.
 - Automatic re-run of a failed hero (each re-run costs money, so it is always offered, never done).
 - Auto-detecting heroes by persona (only the question type is auto-detected).
 

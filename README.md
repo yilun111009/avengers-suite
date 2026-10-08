@@ -25,6 +25,7 @@ Upgrading from `rg-repo-explainer`: the plugin name changed, so uninstall the ol
 /ask deep what breaks if I change the Order status enum   # runs the agent on opus, asks you first
 /hulk what breaks if I change the Order status enum   # hero command: impact lens
 /drstrange what happens when a payment fails          # hero command: workflow lens
+/assemble how does the refund flow work and what could break it   # Fury picks a team, you approve it
 /ironman how does the whole refund flow hold together       # opus, asks you first, ends with a systems check
 /hawkeye where is the retry logic                            # haiku, one to three lines, no report
 /thanos is anything unused in the billing module             # candidates for removal; never deletes
@@ -71,6 +72,22 @@ Each hero is `/ask` with the question type fixed and a default audience. Name an
 Presets (`type: auto`: ironman, hawkeye, spiderman) have no lens of their own; the question type is detected as in `/ask`. `/ask deep` is the same as `/ironman`.
 
 A hero is one file in `heroes/` (frontmatter plus the lens text) and one thin skill in `skills/<name>/`. The intro line is flavour only; it cannot change the rules or the read-only guarantee.
+
+### Assemble (Fury)
+
+`/assemble <goal>` plans a team instead of answering directly. Fury splits the goal into sub-questions, picks a hero for each and a model for each, and shows you the plan before anything runs:
+
+```
+Fury's plan for: "how does the refund flow work and what could break it"
+1. drstrange  opus    trace the refund flow end to end
+2. hulk       sonnet  what breaks if Order status changes
+3. loki       sonnet  hidden risks in the refund path
+Rough cost: 3 agents (1 opus), about 5x a normal /ask
+```
+
+Your choices are `Approve`, `Approve, all on sonnet`, `Change` (type an edit such as "drop Loki, Hulk on opus") and `Cancel`. A team has at most 5 heroes; an edit that would pass 5 is refused. The same hero may appear twice for two different sub-questions, and each counts. The cost line is a relative count, not a price.
+
+The heroes run in parallel as the same read-only agent. You get `docs/flows/<slug>/report.html` for the team and `docs/flows/<slug>/heroes/<hero>/report.html` for each hero. If one hero fails, the others still finish and the team page marks it failed; run `/assemble rerun <hero>` to re-run only that hero. Fury never re-runs one on his own.
 
 ### Audience
 
@@ -136,7 +153,7 @@ node --test "tests/*.test.mjs"
 
 Use the quoted glob form; passing a bare folder does not work on current Node versions.
 
-Scripts live in `engine/`, prompts in `heroes/` and `audiences/`, entry points in `skills/`.
+Scripts live in `engine/` (`plan-team.mjs` and `build-assemble.mjs` serve `/assemble`), prompts in `heroes/` and `audiences/`, entry points in `skills/`.
 
 ## Limits
 
@@ -149,5 +166,6 @@ Scripts live in `engine/`, prompts in `heroes/` and `audiences/`, entry points i
 - Each hero sets a model on the Agent call. It has not been checked against `CLAUDE_CODE_SUBAGENT_MODEL`: if that variable wins, Hawkeye's haiku and Ironman's opus are silently ignored. Check which model actually ran the first time.
 - Hero personas are flavour. They do not change the investigation rules.
 - On a repo's first use, onboarding runs before the opus approval question, so a cancelled `/ironman` can still leave a repo profile behind.
+- `/assemble` runs several agents at once, so it costs several times a normal `/ask`; the cost line is a relative count, not a price.
 - Tested so far only on Razer Gold Admin Web.
 - "Avengers" is a Marvel trademark: fine for a private or team plugin, rename before any public publish.
