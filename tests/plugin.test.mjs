@@ -5,10 +5,10 @@ import { fileURLToPath } from 'node:url';
 
 const read = (p) => readFileSync(fileURLToPath(new URL(`../${p}`, import.meta.url)), 'utf8');
 
-test('plugin.json is repo-avengers 1.3.0', () => {
+test('plugin.json is repo-avengers 1.4.0', () => {
   const p = JSON.parse(read('.claude-plugin/plugin.json'));
   assert.equal(p.name, 'repo-avengers');
-  assert.equal(p.version, '1.3.0');
+  assert.equal(p.version, '1.4.0');
 });
 
 test('marketplace keeps the id rg-local and lists repo-avengers', () => {
@@ -34,10 +34,22 @@ test('the README names the new plugin and keeps the upgrade note', () => {
   assert.ok(r.includes('/plugin uninstall rg-repo-explainer@rg-local'));
 });
 
-test('the changelog has a 1.3.0 entry on top and keeps 1.2.0, 1.1.0 and 1.0.0', () => {
+test('the changelog has a 1.4.0 entry on top and keeps every earlier version', () => {
   const c = read('CHANGELOG.md').replace(/\r\n/g, '\n');
-  assert.match(c, /^# Changelog\n\n## 1\.3\.0 /);
-  for (const v of ['1.2.0', '1.1.0', '1.0.0']) assert.ok(c.includes(`\n## ${v} `), `changelog lost ${v}`);
+  assert.match(c, /^# Changelog\n\n## 1\.4\.0 /);
+  for (const v of ['1.3.0', '1.2.0', '1.1.0', '1.0.0']) assert.ok(c.includes(`\n## ${v} `), `changelog lost ${v}`);
+});
+
+test('the README documents /assemble, the approval and the cap', () => {
+  const r = read('README.md');
+  for (const needle of ['/assemble', 'at most 5', 'Approve, all on sonnet', 'plan-team', 'build-assemble']) {
+    assert.ok(r.includes(needle), `README does not mention ${needle}`);
+  }
+});
+
+test('the spec records that /assemble shipped', () => {
+  const spec = read('docs/superpowers/specs/2026-10-08-heroes-and-assemble-design.md');
+  assert.match(spec, /`\/assemble` shipped in 1\.4\.0/);
 });
 
 test('the README documents the hero commands and the new layout', () => {

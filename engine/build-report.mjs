@@ -3,7 +3,8 @@
 // Renders a self-contained HTML flow report (inline SVG diagram, no external requests).
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { LENS_TYPES, TYPE_LABEL } from './types.mjs';
+import { REPORT_TYPES, TYPE_LABEL } from './types.mjs';
+import { scanSecrets } from './secrets.mjs';
 
 const [, , inPath, outPath, ...flags] = process.argv;
 if (!inPath || !outPath) {
@@ -11,7 +12,7 @@ if (!inPath || !outPath) {
   process.exit(2);
 }
 const d = JSON.parse(readFileSync(inPath, 'utf8'));
-const KNOWN_TYPES = LENS_TYPES;
+const KNOWN_TYPES = REPORT_TYPES;
 const KNOWN_AUDIENCES = ['dev', 'qa', 'pm', 'support'];
 const AUDIENCE_LABEL = { dev: 'Developers', qa: 'QA', pm: 'Product', support: 'Support' };
 // reports from before 1.0.0 have neither field: they are workflow questions for developers
@@ -20,21 +21,7 @@ const audience = KNOWN_AUDIENCES.includes(d.audience) ? d.audience : 'dev';
 const startPlain = flags.includes('--plain') || audience !== 'dev';
 
 // ---- secret scan: refuse to write a report that appears to contain a credential ----
-const SECRET_PATTERNS = [
-  ['AWS access key id', /\bAKIA[0-9A-Z]{16}\b/],
-  ['private key block', /-----BEGIN [A-Z ]*PRIVATE KEY-----/],
-  ['JWT', /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/],
-  ['bearer token', /\bBearer\s+[A-Za-z0-9._~+\/=-]{20,}/],
-  ['connection-string credential', /\b(?:Password|Pwd)\s*=\s*[^;\s'"]{4,}/i],
-  ['URL with embedded credentials', /\b[a-z][a-z0-9+.-]*:\/\/[^\s\/:@]+:[^\s\/@]{3,}@/i],
-  ['assigned secret value', /\b(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?key|token|client[_-]?secret)\w*["']?\s*[:=]\s*["']?(?=[^\s"',;]{8,})(?=[^\s"',;]*[\d!@#$%^&*])[^\s"',;]+/i],
-];
-const secretHits = [];
-(function scan(v, path) {
-  if (typeof v === 'string') { for (const [name, re] of SECRET_PATTERNS) if (re.test(v)) secretHits.push(`${path}: looks like ${name}`); }
-  else if (Array.isArray(v)) v.forEach((x, i) => scan(x, `${path}[${i}]`));
-  else if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) scan(x, path ? `${path}.${k}` : k);
-})(d, '');
+const secretHits = scanSecrets(d, '');
 if (secretHits.length) {
   console.error('REFUSING to write report: possible secrets found (values not shown). Remove or redact them in the JSON, then re-run.');
   secretHits.forEach((h) => console.error('  - ' + h));

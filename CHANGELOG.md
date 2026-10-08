@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.0 - 2026-10-08
+
+### Added
+- `/assemble <goal>`: Fury splits a goal into sub-questions and proposes a team of at most 5 heroes, with a model for each and a relative cost line. Nothing runs until you choose `Approve`, `Approve, all on sonnet`, `Change` or `Cancel`. The heroes then run in parallel as read-only agents. You get one merged report plus a full report per hero under `docs/flows/<slug>/heroes/`.
+- `/assemble rerun <hero>`: re-run only a failed hero and rebuild the combined page. A failed hero never blocks the others and is never re-run automatically.
+- `engine/plan-team.mjs` (validates and edits a team plan, builds the approval text and the cost line), `engine/build-assemble.mjs` (renders the combined page) and `engine/secrets.mjs` (the secret scan, now shared by both report builders, with the patterns unchanged).
+- Text-only heroes (`/hawkeye`) cannot join a team: `plan-team.mjs` refuses any hero whose file says `report: false`, because every team member must produce a report.
+- Report type `assemble`, with its own entry in the index filter. It is a report type only: heroes cannot claim it and the router never returns it.
+
+### Notes
+- Approval, the cap of 5 and the write limit are instructions in the skill text. The only technical barrier is still the agent's tool list (`Read, Grep, Glob`).
+- Each hero's per-call model has not been checked against `CLAUDE_CODE_SUBAGENT_MODEL`; check which model actually ran the first time.
+- `/assemble` has not had a run on a real repository yet.
+
 ## 1.3.0 - 2026-10-08
 
 ### Added
