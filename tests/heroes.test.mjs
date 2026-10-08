@@ -55,3 +55,34 @@ test('the agent file lists every lens type slug', () => {
     assert.ok(agent.includes(t), `agent file does not list ${t}`);
   }
 });
+
+const PRESETS = {
+  ironman: { model: 'opus', audience: 'dev', report: 'true', approval: 'required' },
+  hawkeye: { model: 'haiku', audience: 'dev', report: 'false', approval: 'none' },
+  spiderman: { model: 'sonnet', audience: 'pm', report: 'true', approval: 'none' },
+};
+
+test('the preset heroes are type auto and carry the settings from the spec', () => {
+  for (const [n, want] of Object.entries(PRESETS)) {
+    const t = readFileSync(join(pluginDir, 'heroes', `${n}.md`), 'utf8').replace(/\r\n/g, '\n');
+    const fm = Object.fromEntries(t.split('---')[1].trim().split('\n').map((l) => [l.split(':')[0], l.slice(l.indexOf(':') + 1).trim()]));
+    assert.equal(fm.type, 'auto', `${n} type`);
+    assert.equal(fm.name, n, `${n} name`);
+    assert.equal(fm.command, '/' + n, `${n} command`);
+    for (const [k, v] of Object.entries(want)) assert.equal(fm[k], v, `${n} ${k}`);
+  }
+});
+
+test('the preset heroes need no lens headings, and the whole shipped set passes preflight', () => {
+  const repo = mkdtempSync(join(tmpdir(), 'avengers-repo-'));
+  writeFileSync(join(repo, 'app.js'), 'export {}\n');
+  const agent = join(mkdtempSync(join(tmpdir(), 'avengers-agent-')), 'agent.md');
+  writeFileSync(agent, '---\nname: x\ntools: Read, Grep, Glob\n---\nbody\n');
+  const env = { ...process.env, AVENGERS_AGENT_PATH: agent };
+  delete env.AVENGERS_PLUGIN_DIR;
+  const r = JSON.parse(spawnSync(process.execPath, [script, 'preflight'], { cwd: repo, env, encoding: 'utf8' }).stdout);
+  assert.deepEqual(r.failures, []);
+  for (const n of Object.keys(PRESETS)) {
+    assert.ok(readFileSync(join(pluginDir, 'skills', n, 'SKILL.md'), 'utf8').includes(`hero: ${n}`), `${n} skill`);
+  }
+});

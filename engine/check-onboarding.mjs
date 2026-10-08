@@ -18,7 +18,7 @@ const onboardPath = join(flows, '_onboarding.md');
 // AVENGERS_AGENT_PATH and AVENGERS_PLUGIN_DIR exist so tests can point the checks at fixture files; the checks still apply in full.
 const agentPath = process.env.AVENGERS_AGENT_PATH ?? fileURLToPath(new URL('../agents/repo-avengers.md', import.meta.url));
 const pluginDir = process.env.AVENGERS_PLUGIN_DIR ?? fileURLToPath(new URL('../', import.meta.url));
-const CORE_HEROES = ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk', 'thanos', 'antman', 'loki'];
+const CORE_HEROES = ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk', 'thanos', 'antman', 'loki', 'ironman', 'hawkeye', 'spiderman'];
 const MODELS = ['sonnet', 'opus', 'haiku'];
 const NON_HERO_SKILLS = new Set(['ask', 'assemble', 'explain']);
 const AUDIENCES = ['dev', 'qa', 'pm', 'support'];
