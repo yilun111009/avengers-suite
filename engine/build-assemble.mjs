@@ -12,27 +12,30 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const list = (a) => (Array.isArray(a) ? a : []);
 const uniq = (a) => [...new Set(a)];
 
+// only objects are results; a null or a string in the list is ignored instead of crashing the page
+const onlyResults = (a) => list(a).filter((r) => r && typeof r === 'object');
+
 export function mergeSources(results) {
-  return uniq(results.filter((r) => r.status === 'ok').flatMap((r) => list(r.sources)));
+  return uniq(onlyResults(results).filter((r) => r.status === 'ok').flatMap((r) => list(r.sources)));
 }
 export function mergeConfidence(results) {
-  const ok = results.filter((r) => r.status === 'ok');
+  const ok = onlyResults(results).filter((r) => r.status === 'ok');
   const pick = (k) => uniq(ok.flatMap((r) => list(r.confidence?.[k])));
   return { confirmed: pick('confirmed'), graphOnly: pick('graphOnly'), unconfirmed: pick('unconfirmed') };
 }
 export function collectDisagreements(results) {
-  return results.filter((r) => r.status === 'ok').flatMap((r) => list(r.disagrees).map((d) => ({ hero: r.hero, ...d })));
+  return onlyResults(results).filter((r) => r.status === 'ok').flatMap((r) => list(r.disagrees).filter((d) => d && typeof d === 'object').map((d) => ({ hero: r.hero, ...d })));
 }
 // a link is only used when it is a relative path inside heroes/ with no ".." and no scheme
 const safeLink = (p) => (typeof p === 'string' && /^heroes\/[A-Za-z0-9_-]+\/report\.html$/.test(p) ? p : null);
 
 export function render(d) {
-  const results = list(d.results);
+  const results = onlyResults(d.results);
   const done = results.filter((r) => r.status === 'ok');
   const card = (r) => {
     if (r.status !== 'ok') {
       return `<li class="item bad"><b>${esc(r.hero)}</b> <span class="tag">${esc(r.model)}</span> <span class="age bad">failed</span>
-<div class="q">${esc(r.task)}</div><p>${esc(r.error || 'no result')}</p><p class="muted">Re-run only this hero: ask Fury to re-run ${esc(r.hero)}. Nothing is re-run automatically.</p></li>`;
+<div class="q">${esc(r.task)}</div><p>${esc(r.error || 'no result')}</p><p class="muted">Re-run only this hero with <code>/assemble rerun ${esc(r.hero)}</code>. Nothing is re-run automatically.</p></li>`;
     }
     const link = safeLink(r.reportPath);
     return `<li class="item"><b>${esc(r.hero)}</b> <span class="tag">${esc(r.model)}</span> <span class="tag">${esc(r.type)}</span>
@@ -42,7 +45,7 @@ export function render(d) {
   const confList = (title, items) => (items.length ? `<h3>${title}</h3><ul>${items.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '');
   const dis = collectDisagreements(results);
   const disHtml = dis.length
-    ? `<h2>Where the heroes disagree</h2><p class="muted">Reported by the heroes themselves; Fury's reading of them is his own inference.</p><ul>${dis.map((x) => `<li><b>${esc(x.hero)}</b> vs <b>${esc(x.with)}</b> about ${esc(x.about)}: <code>${esc(x.mine)}</code> against <code>${esc(x.theirs)}</code></li>`).join('')}</ul>`
+    ? `<h2>Where the heroes disagree</h2><p class="muted">Fury's inference from conflicting citations; the heroes' own reports are linked above.</p><ul>${dis.map((x) => `<li><b>${esc(x.hero)}</b> vs <b>${esc(x.with)}</b> about ${esc(x.about)}: <code>${esc(x.mine)}</code> against <code>${esc(x.theirs)}</code></li>`).join('')}</ul>`
     : '';
   const sources = mergeSources(results);
   return `<!doctype html>
@@ -61,7 +64,7 @@ ul{list-style:none;padding:0;margin:8px 0;display:grid;gap:10px}.card,.item{back
 <h1>${esc(d.title)}</h1>
 <div class="meta">Goal: ${esc(d.question)} &middot; Treated as: Assemble question &middot; Generated ${esc(d.generated ?? '')}${d.commit ? ` &middot; commit <code>${esc(d.commit)}</code>` : ''}</div>
 <h2>Summary</h2>
-<div class="card"><p>${esc(d.summary)}</p></div>
+<div class="card"><p>${esc(d.summary)}</p>${d.plainSummary && d.plainSummary !== d.summary ? `<p class="muted">In plain words: ${esc(d.plainSummary)}</p>` : ''}</div>
 <h2>The team</h2>
 ${done.length ? '' : '<div class="card"><p>No hero finished, so there is nothing to merge. See the failures below.</p></div>'}
 <ul>${results.map(card).join('')}</ul>
@@ -75,7 +78,8 @@ ${sources.length ? `<h2>Sources</h2><ul>${sources.map((s) => `<li><code>${esc(s)
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [, , inPath, outPath] = process.argv;
   if (!inPath || !outPath) { console.error('usage: node build-assemble.mjs <combined.json> <out.html>'); process.exit(2); }
-  const d = JSON.parse(readFileSync(inPath, 'utf8'));
+  let d;
+  try { d = JSON.parse(readFileSync(inPath, 'utf8')); } catch (e) { console.error(`${inPath} is not valid JSON or cannot be read: ${e.code ?? 'parse error'}`); process.exit(2); }
   const hits = scanSecrets(d, '');
   if (hits.length) {
     console.error('REFUSING to write report: possible secrets found (values not shown). Remove or redact them in the JSON, then re-run.');

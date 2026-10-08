@@ -102,3 +102,44 @@ test('the page shows the disagreement section only when there is one', () => {
 test('usage errors exit 2', () => {
   assert.equal(spawnSync(process.execPath, [script], { encoding: 'utf8' }).status, 2);
 });
+
+test('a failed hero card names the real re-run command', () => {
+  const r = build({ results: [{ hero: 'loki', model: 'sonnet', task: 't', status: 'failed', error: 'x' }] });
+  assert.match(r.html, /\/assemble rerun loki/);
+  assert.doesNotMatch(r.html, /ask Fury to re-run/);
+});
+
+test('a null or non-object entry in results does not crash the page', () => {
+  const r = build({ results: [null, 'oops', ok('hulk')] });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.html, /heroes\/hulk\/report\.html/);
+});
+
+test('bad input JSON gives a clear one-line error and exit 2, not a stack trace', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'avengers-assemble-'));
+  const inPath = join(dir, 'report.json');
+  writeFileSync(inPath, '{not json');
+  const r = spawnSync(process.execPath, [script, inPath, join(dir, 'o.html')], { encoding: 'utf8' });
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /not valid JSON/);
+  assert.doesNotMatch(r.stderr, /at JSON\.parse|node:internal/);
+});
+
+test('the disagreement section says the reading is the Fury inference, as the spec does', () => {
+  const r = build({ results: [ok('hulk', { disagrees: [{ with: 'loki', about: 'cache', mine: 'a:1', theirs: 'b:2' }] }), ok('loki')] });
+  assert.match(r.html, /Fury's inference from conflicting citations/);
+  assert.doesNotMatch(r.html, /Reported by the heroes themselves/);
+});
+
+test('the plain-language summary is rendered for non-developer readers', () => {
+  const r = build({ summary: 'technical text', plainSummary: 'plain words for everyone' });
+  assert.match(r.html, /plain words for everyone/);
+  assert.match(r.html, /technical text/);
+});
+
+test('the merge helpers skip null and non-object entries instead of throwing', () => {
+  const dirty = [null, 'x', undefined, ok('hulk', { sources: ['s:1'], confidence: { confirmed: ['c'], graphOnly: [], unconfirmed: [] }, disagrees: [{ with: 'loki', about: 'a', mine: 'm', theirs: 't' }] })];
+  assert.deepEqual(mergeSources(dirty), ['s:1']);
+  assert.deepEqual(mergeConfidence(dirty).confirmed, ['c']);
+  assert.equal(collectDisagreements(dirty).length, 1);
+});

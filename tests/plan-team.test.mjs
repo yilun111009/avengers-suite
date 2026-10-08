@@ -118,3 +118,38 @@ test('the CLI validates a plan on stdin and exits 1 on a bad one', () => {
   const shown = spawnSync(process.execPath, [script, 'show'], { input: JSON.stringify(plan(H('hulk'))), encoding: 'utf8' });
   assert.match(shown.stdout, /Fury's plan for/);
 });
+
+import { heroTakesPart } from '../engine/plan-team.mjs';
+
+test('a hero whose file says report false cannot be part of a team', () => {
+  assert.equal(heroTakesPart('hawkeye', pluginDir), false);
+  assert.equal(heroTakesPart('hulk', pluginDir), true);
+  const r = validatePlan(plan(H('hawkeye', 'haiku')), known, pluginDir);
+  assert.equal(r.ok, false);
+  assert.match(r.errors.join(' '), /hawkeye[^.]*(text only|report)/i);
+  assert.equal(validatePlan(plan(H('hulk')), known, pluginDir).ok, true);
+});
+
+test('the edit command applies a structured edit and reports errors without changing the plan', () => {
+  const p = plan(H('drstrange', 'opus'), H('hulk'), H('loki'));
+  const good = spawnSync(process.execPath, [script, 'edit'], { input: JSON.stringify({ plan: p, edit: { drop: ['loki'], models: { hulk: 'opus' } } }), encoding: 'utf8' });
+  assert.equal(good.status, 0, good.stdout + good.stderr);
+  assert.deepEqual(JSON.parse(good.stdout).plan.heroes.map((h) => [h.hero, h.model]), [['drstrange', 'opus'], ['hulk', 'opus']]);
+  const bad = spawnSync(process.execPath, [script, 'edit'], { input: JSON.stringify({ plan: p, edit: { drop: ['thor'] } }), encoding: 'utf8' });
+  assert.equal(bad.status, 1);
+  assert.match(JSON.parse(bad.stdout).errors.join(' '), /cannot drop "thor"/);
+});
+
+test('malformed edit shapes return errors instead of throwing', () => {
+  const p = plan(H('hulk'));
+  assert.equal(applyEdit(p, { drop: 'hulk' }, known).ok, false);
+  assert.equal(applyEdit(p, { add: { hero: 'thor', task: 'x' } }, known).ok, false);
+  assert.equal(applyEdit({ goal: 'g' }, { drop: ['hulk'] }, known).ok, false);
+  assert.equal(applyEdit(p, null, known).ok, true);
+});
+
+test('a task or goal that is not a string is refused, and a goal with a newline stays on one line on the screen', () => {
+  assert.equal(validatePlan(plan({ hero: 'hulk', model: 'sonnet', task: { a: 1 } }), known).ok, false);
+  const t = approvalText({ goal: 'line one\nline two', heroes: [H('hulk')] });
+  assert.equal(t.split('\n')[0], 'Fury\'s plan for: "line one line two"');
+});

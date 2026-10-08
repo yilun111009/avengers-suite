@@ -27,7 +27,7 @@ test('the plan step sees the profile and hero front matter, never source, and ca
 test('the approval screen has exactly four choices and nothing runs before the answer', () => {
   for (const c of ['`Approve`', '`Approve, all on sonnet`', '`Change`', '`Cancel`']) assert.ok(s.includes(c), c);
   assert.match(s, /Do not spawn any agent until they answer/);
-  assert.match(s, /On `Cancel`, stop; nothing runs and nothing is written/);
+  assert.match(s, /On `Cancel`, stop; no hero runs and no team report is written/);
   assert.match(s, /plan-team\.mjs" show/);
 });
 
@@ -104,4 +104,53 @@ test('the folder name is chosen before anything is written into it', () => {
 test('the second run of the same hero gets its own folder name in the collect step', () => {
   const collect = s.split('### 6. Collect, per hero')[1].split('### 7.')[0];
   assert.match(collect, /heroes\/<hero>-2\//);
+});
+
+const section = (title, next) => s.split(title)[1].split(next)[0];
+
+test('I1: Fury is told that text-only heroes cannot be on a team', () => {
+  const plan = section('### 3. Plan (Fury)', '### 4.');
+  assert.match(plan, /text only|no report/);
+  assert.match(plan, /\/hawkeye/);
+});
+
+test('I3: the secret check happens before the hero report.json is written, and an unredactable file is deleted', () => {
+  const collect = section('### 6. Collect, per hero', '### 7.');
+  const check = collect.search(/before (you )?write/i);
+  const write = collect.search(/write it to `docs\/flows\/<slug>\/heroes\/<hero>\/report\.json`/);
+  assert.ok(check >= 0 && write >= 0 && check < write, 'the secret check must come before the write');
+  assert.match(collect, /delete that hero's `report\.json`/);
+});
+
+test('I4: the Cancel promise says onboarding may already have written files', () => {
+  const approval = section('### 4. Approval', '### 5.');
+  assert.match(approval, /On `Cancel`, stop; no hero runs and no team report is written/);
+  assert.match(approval, /onboarding, if it ran in step 2, has already written its files/);
+  assert.doesNotMatch(approval, /nothing runs and nothing is written/);
+});
+
+test('I5: Change goes through the edit command, and its errors keep the previous plan', () => {
+  const approval = section('### 4. Approval', '### 5.');
+  assert.match(approval, /plan-team\.mjs" edit/);
+  assert.match(approval, /show the errors and keep the previous plan/);
+});
+
+test('I6: the disagrees entry shape is in the merge step', () => {
+  const merge = section('### 7. Merge (Fury)', '## Re-run');
+  assert.match(merge, /"disagrees": \[\{"with": "<other hero>", "about": "<the claim>", "mine": "<path:line>", "theirs": "<path:line>"\}\]/);
+  assert.match(merge, /"audience":/);
+});
+
+test('I2: re-run runs preflight, reuses the slug and the audience, rewrites the summaries and accepts hulk-2', () => {
+  const rerun = s.split('## Re-run')[1].split('## Notes')[0];
+  assert.match(rerun, /check-onboarding\.mjs" preflight/);
+  assert.match(rerun, /Reuse the slug of the run you found; do not pick a new one/);
+  assert.match(rerun, /reuse its stored `audience`/);
+  assert.match(rerun, /Rewrite `summary`, `plainSummary` and `answer\.md` from all the `ok` results/);
+  assert.match(rerun, /`hulk-2`/);
+});
+
+test('I2: parse sends rerun to Re-run only when the next word is a hero (or hero-N)', () => {
+  const parse = section('### 1. Parse', '### 2.');
+  assert.match(parse, /only if the word after `rerun` is a hero name/);
 });
