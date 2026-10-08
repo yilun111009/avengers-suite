@@ -282,3 +282,20 @@ test('preflight only warns when two coloured themes are within 12 degrees of hue
   assert.equal(r.ok, true, JSON.stringify(r.failures));
   assert.ok(r.warnings.some((w) => w.id === 'theme-similar'), JSON.stringify(r.warnings));
 });
+
+test('preflight reports a directory named like a theme instead of crashing', () => {
+  const plugin = makePlugin({});
+  mkdirSync(join(plugin, 'themes', 'weird.md'), { recursive: true });
+  const r = preflight({ plugin });
+  const f = r.failures.find((x) => x.id === 'theme-invalid' && /weird/.test(x.problem));
+  assert.ok(f, JSON.stringify(r.failures));
+  assert.match(f.problem, /not a readable file/);
+});
+
+test('the similar-hue warning fires at 12 degrees and not at 13, and a grey theme is exempt', () => {
+  // hue 0 vs hue 12 -> warns; hue 0 vs hue 13 -> does not; a grey next to a red -> does not
+  const warn = (a, b) => preflight({ plugin: makePlugin({ 'themes/thor': themeText('thor', { accent: a, accentDark: '#ff8a80' }), 'themes/ironman': themeText('ironman', { accent: b, accentDark: '#ff8a80' }) }) }).warnings.some((w) => w.id === 'theme-similar' && /thor/.test(w.note) && /ironman/.test(w.note));
+  assert.equal(warn('#b71c1c', '#b73c1c'), true, 'hue 0 vs hue 12 is exactly on the threshold');
+  assert.equal(warn('#b71c1c', '#b73e1c'), false, 'hue 0 vs hue 13 is one past it');
+  assert.equal(warn('#b71c1c', '#4a4a4a'), false, 'a grey theme is exempt');
+});

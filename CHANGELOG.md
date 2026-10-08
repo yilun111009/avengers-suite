@@ -10,7 +10,7 @@
 - The report JSON gains an optional `hero`, which the skills write. In hero mode it is the hero you typed (even with `deep`); plain `/ask deep` records `ironman`; plain `/ask` omits it.
 
 ### Notes
-- A report with no `hero`, an unknown hero or a broken theme renders byte-for-byte as before, so saved reports keep working. A report built before 1.5.0 keeps its old look until it is rebuilt.
+- A report with no `hero`, an unknown hero or a broken theme renders byte-for-byte as before, so saved reports keep working. A report built before 1.5.0 has no `hero` in its JSON, so it keeps its old look even when rebuilt; add a `hero` field (for example `"hero": "hulk"`) to its `report.json` and rebuild it to give it a look.
 - Tests prove the colours are legal and readable and that the markup is present. They cannot tell you whether it looks good: open a themed report in a browser.
 
 ## 1.4.0 - 2026-10-08

@@ -105,7 +105,7 @@ tagline: "Hulk smash. Here is what breaks."
 
 A theme can only pick an emblem by name from the fixed set; it never supplies SVG, and colours must be `#rrggbb`. Preflight checks every theme, including contrast: the accent must reach 4.5:1 as text on the page background in both modes, and the title on the band must reach 4.5:1 too. A hero without a theme fails preflight; two coloured themes whose accents are within 12 degrees of hue only produce a warning.
 
-A report with no `hero`, an unknown hero or a broken theme looks byte-for-byte as it did before themes existed. A report built before 1.5.0 keeps its old look until it is rebuilt.
+A report with no `hero`, an unknown hero or a broken theme looks byte-for-byte as it did before themes existed. A report built before 1.5.0 has no `hero` in its JSON, so it keeps its old look even when rebuilt; add a `hero` field (for example `"hero": "hulk"`) to its `report.json` and rebuild it to give it a look.
 
 ### Audience
 

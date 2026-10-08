@@ -8,7 +8,7 @@ export const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '
 
 // the one front-matter parser (check-onboarding.mjs imports it)
 export function parseFrontmatter(text) {
-  const m = String(text ?? '').replace(/^﻿/, '').replace(/\r\n/g, '\n').match(/^---\n([\s\S]*?)\n---/);
+  const m = String(text ?? '').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').match(/^---\n([\s\S]*?)\n---/);
   if (!m) return null;
   const o = {};
   for (const line of m[1].split('\n')) {

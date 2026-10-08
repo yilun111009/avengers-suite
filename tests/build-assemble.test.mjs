@@ -179,7 +179,7 @@ test("a hero card carries that hero's emblem and accent, and a failed hero's car
   const hulk = cardOf(r.html, 'hulk');
   const loki = cardOf(r.html, 'loki');
   assert.match(hulk, /class="emblem"/);
-  assert.match(hulk, /border-left:4px solid #2e7d32/);
+  assert.match(hulk, /--hero:#2e7d32;--hero-d:#7bd88f/);
   assert.doesNotMatch(loki, /class="emblem"/);
   assert.match(loki, /failed/);
 });
@@ -219,4 +219,25 @@ test('a hostile title is escaped inside the themed team band, and replacement pa
   assert.match(r.html, /class="band"/);
   assert.ok(r.html.includes('<h1>&lt;img src=x onerror=alert(1)&gt; &amp; &quot;q&quot; $&amp; $1</h1>'), 'title was not escaped verbatim');
   assert.doesNotMatch(r.html, /<img src=x/);
+});
+
+test('a repeated hero (hulk-2) still gets the hero\'s emblem and edge on the team page', () => {
+  const obj = JSON.parse(readFileSync(asmJson, 'utf8'));
+  obj.results[0].hero = 'hulk-2';
+  const r = buildThemed(obj);
+  assert.equal(r.status, 0, r.stderr);
+  const card = cardOf(r.html, 'hulk-2');
+  assert.ok(card);
+  assert.match(card, /class="emblem"/);
+});
+
+test('the card edge uses the light accent in light mode and the dark accent in dark mode', () => {
+  const r = buildThemed(JSON.parse(readFileSync(asmJson, 'utf8')));
+  const card = cardOf(r.html, 'hulk');
+  assert.match(card, /--hero:#2e7d32/);
+  assert.match(card, /--hero-d:#7bd88f/);
+  assert.match(r.html, /\.item\[style\*="--hero"\]\{border-left:4px solid var\(--hero\)\}/);
+  assert.match(r.html, /@media \(prefers-color-scheme:dark\)\{:root:not\(\[data-theme=light\]\) \.item\[style\*="--hero"\]\{border-left-color:var\(--hero-d\)\}\}/);
+  assert.match(r.html, /:root\[data-theme=dark\] \.item\[style\*="--hero"\]\{border-left-color:var\(--hero-d\)\}/);
+  assert.doesNotMatch(card, /border-left:4px solid #2e7d32/);
 });

@@ -98,7 +98,7 @@ test('the router is an allowed command and is used for auto heroes', () => {
 test('the folder name is chosen before anything is written into it', () => {
   const idx = (re) => s.search(re);
   assert.ok(idx(/Pick `<slug>`/) >= 0, 'slug rule missing');
-  assert.ok(idx(/Pick `<slug>`/) < idx(/write it to `docs\/flows\/<slug>\/heroes\/<hero>\/report\.json`/), 'slug must be picked before the first write');
+  assert.ok(idx(/Pick `<slug>`/) < idx(/as `docs\/flows\/<slug>\/heroes\/<folder>\/report\.json`/), 'slug must be picked before the first write');
 });
 
 test('the second run of the same hero gets its own folder name in the collect step', () => {
@@ -117,7 +117,7 @@ test('I1: Fury is told that text-only heroes cannot be on a team', () => {
 test('I3: the secret check happens before the hero report.json is written, and an unredactable file is deleted', () => {
   const collect = section('### 6. Collect, per hero', '### 7.');
   const check = collect.search(/before (you )?write/i);
-  const write = collect.search(/write it to `docs\/flows\/<slug>\/heroes\/<hero>\/report\.json`/);
+  const write = collect.search(/as `docs\/flows\/<slug>\/heroes\/<folder>\/report\.json`/);
   assert.ok(check >= 0 && write >= 0 && check < write, 'the secret check must come before the write');
   assert.match(collect, /delete that hero's `report\.json`/);
 });
@@ -157,7 +157,14 @@ test('I2: parse sends rerun to Re-run only when the next word is a hero (or hero
 
 test('each hero JSON gets its hero name and the combined JSON gets fury', () => {
   const collect = section('### 6. Collect, per hero', '### 7.');
-  assert.match(collect, /set `hero` to that hero's name \(`hulk` for `hulk-2`\)/);
+  assert.match(collect, /set `hero` to the hero's base name \(`hulk` even for the second Hulk run\)/);
   const merge = section('### 7. Merge (Fury)', '## Re-run');
   assert.match(merge, /"hero": "fury"/);
+});
+
+test('a repeated hero is written to its own folder, not over the first run', () => {
+  const collect = section('### 6. Collect, per hero', '### 7.');
+  assert.match(collect, /set `hero` to the hero's base name \(`hulk` even for the second Hulk run\)/);
+  assert.match(collect, /write it to that run's own folder \(`heroes\/hulk\/`, or `heroes\/hulk-2\/` for the second run\)/);
+  assert.doesNotMatch(collect, /`hulk` for `hulk-2`/);
 });

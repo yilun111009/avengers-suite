@@ -111,7 +111,9 @@ function themeProblemsAll() {
   }
   for (const name of have) {
     if (name !== 'fury' && !heroes.includes(name)) found.push({ id: 'theme-orphan', problem: `themes/${name}.md has no heroes/${name}.md.`, fix: `Add heroes/${name}.md or remove themes/${name}.md.` });
-    const problems = themeProblems(name, readFileSync(join(dir, name + '.md'), 'utf8'));
+    let text;
+    try { text = readFileSync(join(dir, name + '.md'), 'utf8'); } catch { found.push({ id: 'theme-invalid', problem: `themes/${name}.md is not a readable file.`, fix: `Replace themes/${name}.md with a theme file (a file, not a folder).` }); continue; }
+    const problems = themeProblems(name, text);
     if (problems.length) found.push({ id: 'theme-invalid', problem: `themes/${name}.md: ${problems.join('; ')}.`, fix: `Edit themes/${name}.md so every field is valid.` });
   }
   return found;
@@ -120,7 +122,7 @@ function themeProblemsAll() {
 function themeWarnings() {
   const dir = join(pluginDir, 'themes');
   if (!existsSync(dir)) return [];
-  const coloured = readdirSync(dir).filter((f) => f.endsWith('.md')).map((f) => [f.slice(0, -3), parseFrontmatter(readFileSync(join(dir, f), 'utf8'))?.accent]).filter(([, c]) => /^#[0-9a-fA-F]{6}$/.test(c ?? '') && saturation(c) >= 0.1);
+  const coloured = readdirSync(dir).filter((f) => f.endsWith('.md')).map((f) => { try { return [f.slice(0, -3), parseFrontmatter(readFileSync(join(dir, f), 'utf8'))?.accent]; } catch { return [f.slice(0, -3), undefined]; } }).filter(([, c]) => /^#[0-9a-fA-F]{6}$/.test(c ?? '') && saturation(c) >= 0.1);
   const out = [];
   for (let i = 0; i < coloured.length; i++) for (let j = i + 1; j < coloured.length; j++) {
     const d = Math.abs(hue(coloured[i][1]) - hue(coloured[j][1]));
