@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.0 - 2026-10-08
+
+### Added
+- Report themes: each hero's report now has a look of its own, and the `/assemble` team page has Fury's. A look is an accent colour (one for light mode, one for dark), a small emblem, a coloured header band and one in-character tagline. Findings, wording, sections, the diagram and the layout are unchanged.
+- `themes/`: twelve small files (the 11 heroes and `fury`), each with `accent`, `accentDark`, `emblem` and `tagline`. A theme can only choose an emblem by name from a fixed set of twelve; it never supplies SVG, and colours are accepted only as `#rrggbb`.
+- `engine/themes.mjs`: colour checks, WCAG contrast maths, the emblems and `themeFor`. The front-matter parser moved here from `check-onboarding.mjs`, so there is one copy.
+- Preflight checks every theme: valid colours, a known emblem, a tagline of at most 100 characters, and contrast of at least 4.5:1 for the accent as text in both modes and for the title on the band. A hero without a theme fails; two coloured themes within 12 degrees of hue only warn.
+- The report JSON gains an optional `hero`, which the skills write. In hero mode it is the hero you typed (even with `deep`); plain `/ask deep` records `ironman`; plain `/ask` omits it.
+
+### Notes
+- A report with no `hero`, an unknown hero or a broken theme renders byte-for-byte as before, so saved reports keep working. A report built before 1.5.0 has no `hero` in its JSON, so it keeps its old look even when rebuilt; add a `hero` field (for example `"hero": "hulk"`) to its `report.json` and rebuild it to give it a look.
+- Tests prove the colours are legal and readable and that the markup is present. They cannot tell you whether it looks good: open a themed report in a browser.
+
 ## 1.4.0 - 2026-10-08
 
 ### Added

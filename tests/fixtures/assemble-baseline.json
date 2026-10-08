@@ -1,0 +1,39 @@
+{
+  "type": "assemble",
+  "title": "Team run",
+  "question": "the goal",
+  "summary": "combined",
+  "plainSummary": "plain",
+  "plan": [],
+  "results": [
+    {
+      "hero": "hulk",
+      "model": "sonnet",
+      "task": "t hulk",
+      "status": "ok",
+      "title": "hulk title",
+      "summary": "hulk summary",
+      "type": "impact",
+      "reportPath": "heroes/hulk/report.html",
+      "sources": [
+        "a:1"
+      ],
+      "confidence": {
+        "confirmed": [
+          "c"
+        ],
+        "graphOnly": [],
+        "unconfirmed": []
+      }
+    },
+    {
+      "hero": "loki",
+      "model": "sonnet",
+      "task": "t",
+      "status": "failed",
+      "error": "e"
+    }
+  ],
+  "generated": "2026-10-08",
+  "commit": "abc1234"
+}

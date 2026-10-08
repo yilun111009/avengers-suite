@@ -104,3 +104,79 @@ test('an assemble report built by build-report falls back with its own label rat
   assert.equal(r.status, 0);
   assert.match(r.html, /Treated as: Assemble question/);
 });
+
+import { mkdirSync as mkdirSyncB } from 'node:fs';
+
+const root = fileURLToPath(new URL('../', import.meta.url));
+const baselineJson = join(root, 'tests', 'fixtures', 'report-baseline.json');
+const baselineHtml = readFileSync(join(root, 'tests', 'fixtures', 'report-baseline.html'), 'utf8');
+
+function buildFile(jsonObj, env = {}) {
+  const dir = mkdtempSync(join(tmpdir(), 'avengers-themed-'));
+  const inPath = join(dir, 'report.json');
+  const outPath = join(dir, 'report.html');
+  writeFileSync(inPath, JSON.stringify(jsonObj));
+  const r = spawnSync(process.execPath, [script, inPath, outPath], { encoding: 'utf8', env: { ...process.env, ...env } });
+  return { status: r.status, stderr: r.stderr, html: existsSync(outPath) ? readFileSync(outPath, 'utf8') : '' };
+}
+const baseObj = () => JSON.parse(readFileSync(baselineJson, 'utf8'));
+
+test('a report with no hero is byte-for-byte what the builder wrote before themes existed', () => {
+  const r = buildFile(baseObj());
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(r.html, baselineHtml);
+});
+
+test('an unknown, unsafe or non-string hero changes nothing and does not crash', () => {
+  for (const hero of ['nobody', '../secrets', 'a/b', 'HULK', '', 5, ['hulk'], {}, null]) {
+    const r = buildFile({ ...baseObj(), hero });
+    assert.equal(r.status, 0, `${JSON.stringify(hero)}: ${r.stderr}`);
+    assert.equal(r.html, baselineHtml, JSON.stringify(hero));
+  }
+});
+
+test('hero hulk adds the band, the emblem, the tagline and the three accent overrides', () => {
+  const r = buildFile({ ...baseObj(), hero: 'hulk' });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.html, /class="band"/);
+  assert.match(r.html, /class="emblem"/);
+  assert.match(r.html, /Hulk smash\. Here is what breaks\./);
+  assert.match(r.html, /:root\{--accent:#2e7d32\}/);
+  assert.match(r.html, /:root:not\(\[data-theme=light\]\)\{--accent:#7bd88f\}/);
+  assert.match(r.html, /:root\[data-theme=dark\]\{--accent:#7bd88f\}/);
+});
+
+test('the themed title is still a real h1, escaped, and the rest of the page is unchanged', () => {
+  const r = buildFile({ ...baseObj(), hero: 'hulk', title: '<b>Bold & "quoted"</b>' });
+  assert.match(r.html, /<h1>&lt;b&gt;Bold &amp; &quot;quoted&quot;&lt;\/b&gt;<\/h1>/);
+  assert.doesNotMatch(r.html, /<h1><b>/);
+  assert.ok(r.html.includes('<h2>Summary</h2>'));
+  assert.ok(r.html.includes('class="diagram dev-only"'));
+});
+
+test('a hero whose theme file is missing or broken renders unthemed, with exit 0', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'avengers-plug-'));
+  mkdirSyncB(join(dir, 'themes'), { recursive: true });
+  writeFileSync(join(dir, 'themes', 'hulk.md'), '---\nname: hulk\naccent: "green"\naccentDark: "#7bd88f"\nemblem: fist\ntagline: "x"\n---\n');
+  for (const plugin of [dir, mkdtempSync(join(tmpdir(), 'avengers-empty-'))]) {
+    const r = buildFile({ ...baseObj(), hero: 'hulk' }, { AVENGERS_PLUGIN_DIR: plugin });
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(r.html, baselineHtml);
+  }
+});
+
+test('a secret is still refused when a hero is set', () => {
+  const r = buildFile({ ...baseObj(), hero: 'hulk', summary: 'key AKIAABCDEFGHIJKLMNOP' });
+  assert.equal(r.status, 3);
+});
+
+test('a title containing replacement patterns comes out verbatim in the themed band', () => {
+  // in String.replace a plain-string replacement reads $&, $1, $$ and $' as patterns; a function replacement does not
+  const bt = String.fromCharCode(96);
+  for (const title of ['Costs $& more', "Price $1 and $$ and $'", '$' + bt + ' before']) {
+    const r = buildFile({ ...baseObj(), hero: 'hulk', title });
+    assert.equal(r.status, 0, r.stderr);
+    const esc = title.replace(/&/g, '&amp;').replace(/'/g, '&#39;');
+    assert.ok(r.html.includes('<h1>' + esc + '</h1>'), 'title was altered: ' + title);
+  }
+});

@@ -1,0 +1,74 @@
+{
+  "title": "Baseline report",
+  "question": "How does X work?",
+  "summary": "S",
+  "plainSummary": "P",
+  "type": "logic",
+  "audience": "dev",
+  "generated": "2026-10-08",
+  "commit": "abc1234",
+  "nodes": [
+    {
+      "id": "n1",
+      "label": "Alpha",
+      "lane": "entry",
+      "confirmed": true
+    },
+    {
+      "id": "n2",
+      "label": "Beta",
+      "lane": "data",
+      "confirmed": false
+    }
+  ],
+  "edges": [
+    {
+      "from": "n1",
+      "to": "n2",
+      "label": "calls",
+      "kind": "ok",
+      "step": 1
+    }
+  ],
+  "steps": [
+    {
+      "n": 1,
+      "text": "Alpha calls Beta",
+      "cite": "src/a.ts:1"
+    }
+  ],
+  "rules": [
+    {
+      "text": "A rule",
+      "cite": "src/a.ts:2"
+    }
+  ],
+  "sources": [
+    "src/a.ts:1"
+  ],
+  "confidence": {
+    "confirmed": [
+      "x"
+    ],
+    "graphOnly": [],
+    "unconfirmed": [
+      "y"
+    ]
+  },
+  "sections": [
+    {
+      "heading": "Decision table",
+      "kind": "table",
+      "columns": [
+        "A",
+        "B"
+      ],
+      "rows": [
+        [
+          "1",
+          "2"
+        ]
+      ]
+    }
+  ]
+}

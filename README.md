@@ -89,6 +89,24 @@ Your choices are `Approve`, `Approve, all on sonnet`, `Change` (type an edit suc
 
 The heroes run in parallel as the same read-only agent. You get `docs/flows/<slug>/report.html` for the team and `docs/flows/<slug>/heroes/<hero>/report.html` for each hero. If one hero fails, the others still finish and the team page marks it failed; run `/assemble rerun <hero>` to re-run only that hero. Fury never re-runs one on his own. `/hawkeye` answers in text only, so it cannot be part of a team; use it on its own. `Change` is applied by `engine/plan-team.mjs edit`, so an edit that names a hero not in the plan, or that would pass 5, is refused with the reason and the previous plan is kept.
 
+### Report themes
+
+Every report has a look that belongs to the hero that made it: an accent colour (one for light mode, one for dark), a small emblem, a coloured header band and one tagline under the title. The `/assemble` team page has Fury's look, and each hero card on it shows that hero's emblem and a coloured edge. Findings, sections, wording and the diagram are exactly the same; only the header and the accent change.
+
+A look is one small file in `themes/`:
+
+```
+name: hulk
+accent: "#2e7d32"        # accent in light mode, #rrggbb only
+accentDark: "#7bd88f"    # accent in dark mode
+emblem: fist             # a name from the fixed set of twelve
+tagline: "Hulk smash. Here is what breaks."
+```
+
+A theme can only pick an emblem by name from the fixed set; it never supplies SVG, and colours must be `#rrggbb`. Preflight checks every theme, including contrast: the accent must reach 4.5:1 as text on the page background in both modes, and the title on the band must reach 4.5:1 too. A hero without a theme fails preflight; two coloured themes whose accents are within 12 degrees of hue only produce a warning.
+
+A report with no `hero`, an unknown hero or a broken theme looks byte-for-byte as it did before themes existed. A report built before 1.5.0 has no `hero` in its JSON, so it keeps its old look even when rebuilt; add a `hero` field (for example `"hero": "hulk"`) to its `report.json` and rebuild it to give it a look.
+
 ### Audience
 
 Name the audience in the question ("for qa", "explain to the PM", "answer for support") and you are not asked. If you do not, you are asked once: "Is this answer for you, or for someone else?" and, if someone else, "Who?". Answers for QA, PM and support use no code names in the body and end with source references for a developer to verify before forwarding.
@@ -153,7 +171,7 @@ node --test "tests/*.test.mjs"
 
 Use the quoted glob form; passing a bare folder does not work on current Node versions.
 
-Scripts live in `engine/` (`plan-team.mjs` and `build-assemble.mjs` serve `/assemble`), prompts in `heroes/` and `audiences/`, entry points in `skills/`.
+Report looks live in `themes/` (one file per theme) and `engine/themes.mjs`. Scripts live in `engine/` (`plan-team.mjs` and `build-assemble.mjs` serve `/assemble`), prompts in `heroes/` and `audiences/`, entry points in `skills/`.
 
 ## Limits
 
@@ -167,5 +185,6 @@ Scripts live in `engine/` (`plan-team.mjs` and `build-assemble.mjs` serve `/asse
 - Hero personas are flavour. They do not change the investigation rules.
 - On a repo's first use, onboarding runs before the opus approval question, so a cancelled `/ironman` can still leave a repo profile behind.
 - `/assemble` runs several agents at once, so it costs several times a normal `/ask`; the cost line is a relative count, not a price.
+- Looks cannot be checked by tests; open a themed report in a browser. The contrast rule guarantees a readable accent, not a good-looking one. Emblems are simple original icons, not Marvel artwork.
 - Tested so far only on Razer Gold Admin Web.
 - "Avengers" is a Marvel trademark: fine for a private or team plugin, rename before any public publish.

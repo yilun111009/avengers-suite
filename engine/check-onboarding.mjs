@@ -9,6 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { HERO_TYPES } from './types.mjs';
+import { parseFrontmatter, themeProblems, hue, saturation } from './themes.mjs';
 
 const cmd = process.argv[2] ?? 'preflight';
 const root = process.cwd();
@@ -60,20 +61,6 @@ const UNSAFE_PATTERNS = [
   [/\b(create|modify|delete|overwrite|rename)\s+(?:(?:a|an|the|any|this|that|old|new|existing|local|temporary)\s+){0,3}(file|files|folder|folders|director(y|ies))\b/i, 'tells the agent to change files'],
   [/\b(git\s+(commit|push|checkout|reset)|npm\s+(install|run))\b/i, 'names a modifying command'],
 ];
-function frontmatter(text) {
-  const m = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return null;
-  const o = {};
-  for (const line of m[1].split('\n')) {
-    const kv = line.match(/^([A-Za-z]+):\s*(.*)$/);
-    if (!kv) continue;
-    const raw = kv[2].trim();
-    // a quoted value keeps everything inside the quotes; an unquoted one may end with a `# comment`
-    o[kv[1]] = raw.startsWith('"') ? raw.replace(/^"(.*)"\s*(#.*)?$/, '$1') : raw.replace(/\s+#.*$/, '');
-  }
-  return o;
-}
-
 // every hero that must exist (the core five) plus any other file in heroes/
 function heroFiles() {
   const dir = join(pluginDir, 'heroes');
@@ -82,7 +69,7 @@ function heroFiles() {
 }
 
 function heroProblems(name, text) {
-  const fm = frontmatter(text);
+  const fm = parseFrontmatter(text);
   const file = `heroes/${name}.md`;
   const fix = `Fix the frontmatter of ${file}: name, command, type, audience, model, report, approval and intro are all required.`;
   if (!fm) return [{ id: 'hero-invalid', problem: `${file} has no frontmatter.`, fix }];
@@ -111,6 +98,37 @@ function pairingProblems() {
     if (d.isDirectory() && !NON_HERO_SKILLS.has(d.name) && !heroes.includes(d.name)) found.push({ id: 'hero-unpaired', problem: `skills/${d.name}/ has no heroes/${d.name}.md.`, fix: `Add heroes/${d.name}.md or remove skills/${d.name}/.` });
   }
   return found;
+}
+
+// every hero needs a theme, fury needs one, and a theme must be valid; a theme with no hero is only allowed for fury
+function themeProblemsAll() {
+  const found = [];
+  const dir = join(pluginDir, 'themes');
+  const have = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.md')).map((f) => f.slice(0, -3)) : [];
+  const heroes = heroFiles();
+  for (const name of [...heroes, 'fury']) {
+    if (!have.includes(name)) found.push({ id: 'theme-missing', problem: `themes/${name}.md is missing, so ${name === 'fury' ? 'the /assemble team page' : `/${name}'s reports`} would have no look.`, fix: `Add themes/${name}.md with name, accent, accentDark, emblem and tagline.` });
+  }
+  for (const name of have) {
+    if (name !== 'fury' && !heroes.includes(name)) found.push({ id: 'theme-orphan', problem: `themes/${name}.md has no heroes/${name}.md.`, fix: `Add heroes/${name}.md or remove themes/${name}.md.` });
+    let text;
+    try { text = readFileSync(join(dir, name + '.md'), 'utf8'); } catch { found.push({ id: 'theme-invalid', problem: `themes/${name}.md is not a readable file.`, fix: `Replace themes/${name}.md with a theme file (a file, not a folder).` }); continue; }
+    const problems = themeProblems(name, text);
+    if (problems.length) found.push({ id: 'theme-invalid', problem: `themes/${name}.md: ${problems.join('; ')}.`, fix: `Edit themes/${name}.md so every field is valid.` });
+  }
+  return found;
+}
+// two coloured themes whose accents are within 12 degrees of hue may look alike; only a warning (grey is exempt)
+function themeWarnings() {
+  const dir = join(pluginDir, 'themes');
+  if (!existsSync(dir)) return [];
+  const coloured = readdirSync(dir).filter((f) => f.endsWith('.md')).map((f) => { try { return [f.slice(0, -3), parseFrontmatter(readFileSync(join(dir, f), 'utf8'))?.accent]; } catch { return [f.slice(0, -3), undefined]; } }).filter(([, c]) => /^#[0-9a-fA-F]{6}$/.test(c ?? '') && saturation(c) >= 0.1);
+  const out = [];
+  for (let i = 0; i < coloured.length; i++) for (let j = i + 1; j < coloured.length; j++) {
+    const d = Math.abs(hue(coloured[i][1]) - hue(coloured[j][1]));
+    if (Math.min(d, 360 - d) <= 12) out.push({ id: 'theme-similar', note: `themes ${coloured[i][0]} and ${coloured[j][0]} have accents within 12 degrees of hue, so reports may look alike.` });
+  }
+  return out;
 }
 
 function promptProblems() {
@@ -173,12 +191,14 @@ if (cmd === 'preflight') {
   }
 
   failures.push(...promptProblems());
+  failures.push(...themeProblemsAll());
 
   const gi = existsSync(join(root, '.gitignore')) ? readFileSync(join(root, '.gitignore'), 'utf8') : '';
   if (!/^\/?docs\/?(flows\/?)?\s*$/m.test(gi)) warnings.push({ id: 'gitignore', note: 'docs/flows/ is not git-ignored; reports and the repo profile could be committed. Consider adding `docs/flows/` to .gitignore.' });
   if (!['README.md', 'README', 'readme.md', 'CLAUDE.md', 'AGENTS.md'].some((f) => existsSync(join(root, f)))) warnings.push({ id: 'readme', note: 'No README/CLAUDE.md/AGENTS.md; discovery will rely on code alone.' });
   const graphPresent = existsSync(join(root, 'graphify-out', 'graph.json'));
   if (!graphPresent) warnings.push({ id: 'graphify', note: 'No graphify-out/ graph; answers will rely on text search (slower, less structural).' });
+  warnings.push(...themeWarnings());
   if (!tryRun('git', ['rev-parse', '--is-inside-work-tree'])) warnings.push({ id: 'git', note: 'Not a git repository; freshness checks are unavailable.' });
 
   let graphDate = null;
