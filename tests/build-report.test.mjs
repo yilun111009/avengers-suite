@@ -98,3 +98,9 @@ test('type auto is not a report type: it builds as workflow with one warning', (
   assert.match(r.html, /Treated as: Workflow question/);
   assert.equal((r.stderr.match(/unknown type/g) ?? []).length, 1);
 });
+
+test('an assemble report built by build-report falls back with its own label rather than as workflow', () => {
+  const r = build({ type: 'assemble' });
+  assert.equal(r.status, 0);
+  assert.match(r.html, /Treated as: Assemble question/);
+});

@@ -42,3 +42,9 @@ test('the index lists and filters the three new types', () => {
   assert.match(r.html, /data-type="risk"/);
   assert.match(r.html, /<option value="risk">risk<\/option>/);
 });
+
+test('the index lists and filters assemble reports', () => {
+  const r = buildIndex({ a: JSON.stringify({ title: 'Team run', type: 'assemble' }) });
+  assert.match(r.html, /data-type="assemble"/);
+  assert.match(r.html, /<option value="assemble">assemble<\/option>/);
+});

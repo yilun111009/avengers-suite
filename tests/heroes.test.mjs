@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, writeFileSync, mkdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -85,4 +85,17 @@ test('the preset heroes need no lens headings, and the whole shipped set passes 
   for (const n of Object.keys(PRESETS)) {
     assert.ok(readFileSync(join(pluginDir, 'skills', n, 'SKILL.md'), 'utf8').includes(`hero: ${n}`), `${n} skill`);
   }
+});
+
+test('a hero file may not claim the assemble type', () => {
+  const body = readFileSync(join(pluginDir, 'heroes', 'hulk.md'), 'utf8').replace(/\r\n/g, '\n').replace('type: impact', 'type: assemble');
+  const repo = mkdtempSync(join(tmpdir(), 'avengers-repo-'));
+  writeFileSync(join(repo, 'app.js'), 'export {}\n');
+  const plugin = mkdtempSync(join(tmpdir(), 'avengers-plugin-'));
+  mkdirSync(join(plugin, 'heroes'), { recursive: true });
+  writeFileSync(join(plugin, 'heroes', 'hulk.md'), body);
+  const agent = join(mkdtempSync(join(tmpdir(), 'avengers-agent-')), 'agent.md');
+  writeFileSync(agent, '---\nname: x\ntools: Read, Grep, Glob\n---\nbody\n');
+  const r = JSON.parse(spawnSync(process.execPath, [script, 'preflight'], { cwd: repo, env: { ...process.env, AVENGERS_AGENT_PATH: agent, AVENGERS_PLUGIN_DIR: plugin }, encoding: 'utf8' }).stdout);
+  assert.ok(r.failures.some((f) => f.id === 'hero-invalid' && /hulk\.md/.test(f.problem)), JSON.stringify(r.failures));
 });

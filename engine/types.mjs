@@ -6,6 +6,9 @@ export const LENS_TYPES = ['architecture', 'logic', 'workflow', 'support', 'impa
 export const TYPE_LABEL = {
   architecture: 'Architecture', logic: 'Logic', workflow: 'Workflow', support: 'Support', impact: 'Impact',
   deadcode: 'Dead code', deepdive: 'Deep dive', risk: 'Risk',
+  assemble: 'Assemble',
 };
 // a hero file may also say `auto`: no lens of its own, the router decides the type like plain /ask
 export const HERO_TYPES = [...LENS_TYPES, 'auto'];
+// what a saved report may say in `type:`. `assemble` is the combined /assemble page; it is not a lens and not a hero type.
+export const REPORT_TYPES = [...LENS_TYPES, 'assemble'];

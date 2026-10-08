@@ -6,7 +6,7 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { LENS_TYPES } from './types.mjs';
+import { REPORT_TYPES } from './types.mjs';
 
 const flows = resolve(process.argv[2] ?? join(process.cwd(), 'docs', 'flows'));
 if (!existsSync(flows)) { console.error(`no such folder: ${flows}`); process.exit(2); }
@@ -28,7 +28,7 @@ function drift(d) {
   return { total, touched: Number.isNaN(touched) ? null : touched, files: files.length };
 }
 
-const TYPES = LENS_TYPES;
+const TYPES = REPORT_TYPES;
 const rows = [];
 for (const name of readdirSync(flows)) {
   const dir = join(flows, name);
