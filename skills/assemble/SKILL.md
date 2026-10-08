@@ -78,7 +78,7 @@ Spawn **all the agents in one message** so they run concurrently. Each is the `r
 
 ### 6. Collect, per hero
 For each reply, extract its last ```json block.
-- Valid: first check the JSON for secrets before you write it (a password, key, token or connection string in any field: remove it and tell the user), then stamp `generated` (today) and `commit` (`git rev-parse --short HEAD`, omit if not a git repo), set `type` and `audience` to the values you used, and write it to `docs/flows/<slug>/heroes/<hero>/report.json`. Build its page: `node "<scripts dir>/build-report.mjs" docs/flows/<slug>/heroes/<hero>/report.json docs/flows/<slug>/heroes/<hero>/report.html`. The secret scan runs here, for every hero. If it refuses (exit code 3), redact the flagged fields in that hero's JSON and tell the user; do not publish a page that refused.
+- Valid: first check the JSON for secrets before you write it (a password, key, token or connection string in any field: remove it and tell the user), then stamp `generated` (today) and `commit` (`git rev-parse --short HEAD`, omit if not a git repo), set `type` and `audience` to the values you used, set `hero` to that hero's name (`hulk` for `hulk-2`), and write it to `docs/flows/<slug>/heroes/<hero>/report.json`. Build its page: `node "<scripts dir>/build-report.mjs" docs/flows/<slug>/heroes/<hero>/report.json docs/flows/<slug>/heroes/<hero>/report.html`. The secret scan runs here, for every hero. If it refuses (exit code 3), redact the flagged fields in that hero's JSON and tell the user; do not publish a page that refused.
 - Missing or invalid JSON, or a refused build you cannot redact: that hero is `status: "failed"` with a one-line `error`. If a `report.json` with a credential-like value was already written and cannot be redacted, delete that hero's `report.json` (it is inside `docs/flows/`) and say so. The other heroes still finish. Never re-run a hero on your own: each re-run costs money. Offer it once at the end.
 
 If the same hero appears twice in the plan, its second run uses `heroes/<hero>-2/` (third: `-3/`), and that run's `reportPath` names that folder.
@@ -91,6 +91,7 @@ Write the combined JSON to `docs/flows/<slug>/report.json`:
 ```json
 {
   "type": "assemble",
+  "hero": "fury",
   "title": "<short title>",
   "question": "<the goal, verbatim>",
   "summary": "...", "plainSummary": "...",

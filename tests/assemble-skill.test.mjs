@@ -154,3 +154,10 @@ test('I2: parse sends rerun to Re-run only when the next word is a hero (or hero
   const parse = section('### 1. Parse', '### 2.');
   assert.match(parse, /only if the word after `rerun` is a hero name/);
 });
+
+test('each hero JSON gets its hero name and the combined JSON gets fury', () => {
+  const collect = section('### 6. Collect, per hero', '### 7.');
+  assert.match(collect, /set `hero` to that hero's name \(`hulk` for `hulk-2`\)/);
+  const merge = section('### 7. Merge (Fury)', '## Re-run');
+  assert.match(merge, /"hero": "fury"/);
+});

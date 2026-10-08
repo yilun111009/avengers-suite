@@ -139,3 +139,16 @@ test('/ask deep is described as sharing the opus approval, not as identical to /
   assert.match(ask, /uses the same opus approval and model as `\/ironman`/);
   assert.doesNotMatch(ask, /This is the same as `\/ironman`\./);
 });
+
+test('ask writes the hero name into the report JSON, with ironman only for plain /ask deep, and omits it in plain /ask', () => {
+  const step9 = ask.split('### 9. Report')[1].split('Layout:')[0];
+  assert.match(step9, /Also set `hero`:/);
+  assert.match(step9, /omit `hero` in plain `\/ask`/);
+  assert.match(step9, /The report builder uses it to pick the look in `themes\/`/);
+});
+
+test('the hero command wins over deep when choosing the look, and ironman is only for plain /ask deep', () => {
+  const step9 = ask.split('### 9. Report')[1].split('Layout:')[0];
+  assert.match(step9, /in hero mode set `hero` to the hero's name even when `deep` was typed/);
+  assert.match(step9, /only for plain `\/ask deep` set it to `ironman`/);
+});
