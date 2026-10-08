@@ -34,3 +34,11 @@ test('a report with no type, an unknown type, or unreadable JSON is listed as wo
   assert.equal((r.html.match(/data-type="workflow"/g) ?? []).length, 3);
   assert.doesNotMatch(r.html, /banana/);
 });
+
+test('the index lists and filters the three new types', () => {
+  const r = buildIndex({ a: JSON.stringify({ title: 'A', type: 'deadcode' }), b: JSON.stringify({ title: 'B', type: 'deepdive' }), c: JSON.stringify({ title: 'C', type: 'risk' }) });
+  assert.match(r.html, /data-type="deadcode"/);
+  assert.match(r.html, /data-type="deepdive"/);
+  assert.match(r.html, /data-type="risk"/);
+  assert.match(r.html, /<option value="risk">risk<\/option>/);
+});

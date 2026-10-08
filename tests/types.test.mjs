@@ -1,0 +1,12 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { LENS_TYPES, TYPE_LABEL, HERO_TYPES } from '../engine/types.mjs';
+
+test('the shared type list has the five old and the three new types', () => {
+  assert.deepEqual(LENS_TYPES, ['architecture', 'logic', 'workflow', 'support', 'impact', 'deadcode', 'deepdive', 'risk']);
+});
+
+test('every type has a label, and hero files may also say auto', () => {
+  for (const t of LENS_TYPES) assert.ok(TYPE_LABEL[t], `no label for ${t}`);
+  assert.deepEqual(HERO_TYPES, [...LENS_TYPES, 'auto']);
+});
