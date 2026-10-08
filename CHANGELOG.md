@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.0 - 2026-10-08
+
+### Added
+- Hero commands: `/thor` (architecture), `/captainamerica` (logic), `/drstrange` (workflow), `/blackwidow` (support) and `/hulk` (impact). Each is `/ask` with the question type fixed to that hero's lens and the hero's default audience. A named audience in the question still wins (`/hulk for qa ...`).
+- `heroes/<name>.md`: one definition file per hero (frontmatter: name, command, type, audience, model, report, approval, intro; body: the lens). Preflight validates every hero file and checks that each hero has a skill and each hero skill has a hero file.
+
+### Changed
+- Layout: the scripts moved from `skills/explain/` to `engine/`; the lens files became hero files in `heroes/`; `audiences/` moved to the plugin root. `/explain` stays as an alias.
+- Preflight failure ids: `lens-missing` and `lens-unsafe` are now `prompt-missing` and `prompt-unsafe`; new ids `hero-invalid` and `hero-unpaired`. The test override `AVENGERS_ASK_DIR` is now `AVENGERS_PLUGIN_DIR`.
+
+### Notes
+- Reinstall or run `/reload-plugins` after updating. Saved reports keep working: the question type names did not change.
+
 ## 1.1.0 - 2026-10-08
 
 ### Added

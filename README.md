@@ -23,6 +23,8 @@ Upgrading from `rg-repo-explainer`: the plugin name changed, so uninstall the ol
 /ask explain to the PM what happens when a payment fails
 /ask plain why would a user see error 4012          # non-technical answer
 /ask deep what breaks if I change the Order status enum   # runs the agent on opus, asks you first
+/hulk what breaks if I change the Order status enum   # hero command: impact lens
+/drstrange what happens when a payment fails          # hero command: workflow lens
 /ask text where is the retry logic                  # no report
 /ask profile                                        # (re)build the saved repo profile
 /ask migrate                                        # move old loose reports into per-question folders
@@ -41,6 +43,20 @@ Upgrading from `rg-repo-explainer`: the plugin name changed, so uninstall the ol
 | Impact | what breaks if I change the Order status enum | blast-radius list, tests to run, caller graph |
 
 Every answer starts with `Treated as: <type> question, for <audience>.` so you can correct it. If the type is unclear it uses workflow and says so.
+
+### Hero commands
+
+Each hero is `/ask` with the question type fixed and a default audience. Name an audience in the question to override it.
+
+| Command | Lens | Default audience |
+|---|---|---|
+| `/thor` | architecture | dev |
+| `/captainamerica` | logic | dev |
+| `/drstrange` | workflow | dev |
+| `/blackwidow` | support | support |
+| `/hulk` | impact | dev |
+
+A hero is one file in `heroes/` (frontmatter plus the lens text) and one thin skill in `skills/<name>/`. The intro line is flavour only; it cannot change the rules or the read-only guarantee.
 
 ### Audience
 
@@ -71,7 +87,7 @@ A repeated slug becomes `<slug>-<YYYYMMDD>`. Open `docs/flows/index.html` for a 
 
 - The agent's tool list is `Read, Grep, Glob`. It has no shell and cannot write; this is enforced by the tool list, not by a prompt.
 - The skill writes only to `docs/flows/` and `.claude/avengers-hints.md` (an instruction to the skill, not a technical barrier).
-- Preflight fails if the plugin agent ever gains another tool, if a project-level `.claude/agents/*explainer*` or `*avengers*` copy exists that could shadow it, or if any lens or audience prompt file is missing, names a tool, or tells the agent to run or change something (a best-effort text scan).
+- Preflight fails if the plugin agent ever gains another tool, if a project-level `.claude/agents/*explainer*` or `*avengers*` copy exists that could shadow it, or if any hero or audience prompt file is missing, invalid, names a tool, or tells the agent to run or change something, or if a hero and its skill do not match (a best-effort text scan).
 - The agent is told never to quote secret values (a prompt rule), and `build-report.mjs` backs that up with a pattern scan that refuses to write a report containing an obvious credential. The scan is best-effort, so still keep `docs/flows/` out of git.
 
 ## First run in a repo (onboarding)
@@ -105,6 +121,8 @@ node --test "tests/*.test.mjs"
 ```
 
 Use the quoted glob form; passing a bare folder does not work on current Node versions.
+
+Scripts live in `engine/`, prompts in `heroes/` and `audiences/`, entry points in `skills/`.
 
 ## Limits
 
