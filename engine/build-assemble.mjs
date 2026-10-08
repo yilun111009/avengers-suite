@@ -5,8 +5,9 @@
 // Refuses (exit 3, nothing written) if any field looks like a credential. Links are only written when they stay inside heroes/.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { scanSecrets } from './secrets.mjs';
+import { themeFor } from './themes.mjs';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const list = (a) => (Array.isArray(a) ? a : []);
@@ -31,6 +32,8 @@ const safeLink = (p) => (typeof p === 'string' && /^heroes\/[A-Za-z0-9_-]+\/repo
 
 export function render(d) {
   const results = onlyResults(d.results);
+  const pluginDir = process.env.AVENGERS_PLUGIN_DIR ?? fileURLToPath(new URL('../', import.meta.url));
+  const fury = themeFor('fury', pluginDir);
   const done = results.filter((r) => r.status === 'ok');
   const card = (r) => {
     if (r.status !== 'ok') {
@@ -38,7 +41,8 @@ export function render(d) {
 <div class="q">${esc(r.task)}</div><p>${esc(r.error || 'no result')}</p><p class="muted">Re-run only this hero with <code>/assemble rerun ${esc(r.hero)}</code>. Nothing is re-run automatically.</p></li>`;
     }
     const link = safeLink(r.reportPath);
-    return `<li class="item"><b>${esc(r.hero)}</b> <span class="tag">${esc(r.model)}</span> <span class="tag">${esc(r.type)}</span>
+    const t = themeFor(r.hero, pluginDir);
+    return `<li class="item"${t ? ` style="border-left:4px solid ${t.accent}"` : ''}>${t ? t.emblemSvg + ' ' : ''}<b>${esc(r.hero)}</b> <span class="tag">${esc(r.model)}</span> <span class="tag">${esc(r.type)}</span>
 <div class="q">${esc(r.task)}</div><p>${esc(r.summary)}</p>${link ? `<p><a href="${esc(link)}">Open ${esc(r.hero)}'s full report</a></p>` : ''}</li>`;
   };
   const conf = mergeConfidence(results);
@@ -60,8 +64,8 @@ main{max-width:860px;margin:0 auto;padding:24px 16px 64px}h1{margin:0 0 4px;font
 ul{list-style:none;padding:0;margin:8px 0;display:grid;gap:10px}.card,.item{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;overflow-wrap:anywhere}
 .item.bad{border-color:var(--bad)}.q{font-size:.88rem;color:var(--muted);font-style:italic}.tag{border:1px solid var(--line);border-radius:10px;padding:0 8px;font-size:.72rem}
 .age.bad{color:var(--bad);border:1px solid var(--bad);border-radius:10px;padding:0 8px;font-size:.72rem}a{color:var(--accent)}code{font:12.5px ui-monospace,Consolas,monospace}
-</style></head><body><main>
-<h1>${esc(d.title)}</h1>
+</style>${fury ? fury.css : ''}</head><body><main>
+${fury ? fury.bandHtml.replace('{{TITLE}}', () => esc(d.title)) : `<h1>${esc(d.title)}</h1>`}
 <div class="meta">Goal: ${esc(d.question)} &middot; Treated as: Assemble question &middot; Generated ${esc(d.generated ?? '')}${d.commit ? ` &middot; commit <code>${esc(d.commit)}</code>` : ''}</div>
 <h2>Summary</h2>
 <div class="card"><p>${esc(d.summary)}</p>${d.plainSummary && d.plainSummary !== d.summary ? `<p class="muted">In plain words: ${esc(d.plainSummary)}</p>` : ''}</div>
