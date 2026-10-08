@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const script = fileURLToPath(new URL('../skills/explain/build-report.mjs', import.meta.url));
+const script = fileURLToPath(new URL('../engine/build-report.mjs', import.meta.url));
 const BASE = { title: 'T', question: 'Q', summary: 'S', nodes: [], edges: [] };
 
 function build(extra = {}, flags = []) {

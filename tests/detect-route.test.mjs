@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { detect } from '../skills/explain/detect-route.mjs';
+import { detect } from '../engine/detect-route.mjs';
 
 const fixtures = JSON.parse(readFileSync(new URL('./routing-fixtures.json', import.meta.url), 'utf8'));
-const script = fileURLToPath(new URL('../skills/explain/detect-route.mjs', import.meta.url));
+const script = fileURLToPath(new URL('../engine/detect-route.mjs', import.meta.url));
 
 for (const f of fixtures) {
   test(`route: ${JSON.stringify(f.q)}`, () => {

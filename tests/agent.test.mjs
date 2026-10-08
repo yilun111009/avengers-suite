@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const agentFile = join(root, 'agents', 'repo-avengers.md');
-const script = join(root, 'skills', 'explain', 'check-onboarding.mjs');
+const script = join(root, 'engine', 'check-onboarding.mjs');
 
 test('the old agent file is gone and the new one exists', () => {
   assert.equal(existsSync(join(root, 'agents', 'rg-repo-explainer.md')), false);

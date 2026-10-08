@@ -15,8 +15,8 @@ const flows = join(root, 'docs', 'flows');
 const profilePath = join(flows, '_repo-profile.md');
 const onboardPath = join(flows, '_onboarding.md');
 // AVENGERS_AGENT_PATH and AVENGERS_ASK_DIR exist so tests can point the checks at fixture files; the checks still apply in full.
-const agentPath = process.env.AVENGERS_AGENT_PATH ?? fileURLToPath(new URL('../../agents/repo-avengers.md', import.meta.url));
-const askDir = process.env.AVENGERS_ASK_DIR ?? fileURLToPath(new URL('../ask/', import.meta.url));
+const agentPath = process.env.AVENGERS_AGENT_PATH ?? fileURLToPath(new URL('../agents/repo-avengers.md', import.meta.url));
+const askDir = process.env.AVENGERS_ASK_DIR ?? fileURLToPath(new URL('../skills/ask/', import.meta.url));
 const LENSES = ['architecture', 'logic', 'workflow', 'support', 'impact'];
 const AUDIENCES = ['dev', 'qa', 'pm', 'support'];
 const ALLOWED_TOOLS = new Set(['Read', 'Grep', 'Glob']);

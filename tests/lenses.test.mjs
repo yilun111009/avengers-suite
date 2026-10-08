@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const askDir = fileURLToPath(new URL('../skills/ask/', import.meta.url));
-const script = fileURLToPath(new URL('../skills/explain/check-onboarding.mjs', import.meta.url));
+const script = fileURLToPath(new URL('../engine/check-onboarding.mjs', import.meta.url));
 const LENSES = ['architecture', 'logic', 'workflow', 'support', 'impact'];
 const AUDIENCES = ['dev', 'qa', 'pm', 'support'];
 
