@@ -1,6 +1,6 @@
 # repo-avengers
 
-A Claude Code plugin: ask a question about the repo you are in and get an answer with `file:line` citations plus a self-contained HTML report. It handles five kinds of question and writes for the person who will read the answer.
+A Claude Code plugin: ask a question about the repo you are in and get an answer with `file:line` citations plus a self-contained HTML report. It handles eight kinds of question and writes for the person who will read the answer.
 
 Formerly `rg-repo-explainer` (0.x). See [CHANGELOG.md](CHANGELOG.md).
 
@@ -44,6 +44,9 @@ Upgrading from `rg-repo-explainer`: the plugin name changed, so uninstall the ol
 | Workflow | what happens from checkout to payout | numbered steps with actors, flow diagram |
 | Support | why would a user see error 4012 | symptom to cause table, cause tree |
 | Impact | what breaks if I change the Order status enum | blast-radius list, tests to run, caller graph |
+| Dead code | is anything unused in the billing module | candidates for removal with how each was checked (never deletes) |
+| Deep dive | explain this function line by line: calculateRefund | line-by-line table, inputs and side effects, control flow |
+| Risk | what could go wrong in the payout job | risks ranked by severity, and what was checked and found fine |
 
 Every answer starts with `Treated as: <type> question, for <audience>.` so you can correct it. If the type is unclear it uses workflow and says so.
 
@@ -142,5 +145,9 @@ Scripts live in `engine/`, prompts in `heroes/` and `audiences/`, entry points i
 - Cannot read stored procedures, database rows, per-environment config, or other repos; it says so in the Confidence section.
 - Type and audience detection are keyword rules on your wording; a question phrased in an unusual way falls back to workflow and says so.
 - Large monorepos: name the sub-project in the question.
+- Approval questions (`/ironman`, `/ask deep`), the write-path limit and the hero model settings are instructions in the skill text. The only technical barrier is the agent's tool list (`Read, Grep, Glob`).
+- Each hero sets a model on the Agent call. It has not been checked against `CLAUDE_CODE_SUBAGENT_MODEL`: if that variable wins, Hawkeye's haiku and Ironman's opus are silently ignored. Check which model actually ran the first time.
+- Hero personas are flavour. They do not change the investigation rules.
+- On a repo's first use, onboarding runs before the opus approval question, so a cancelled `/ironman` can still leave a repo profile behind.
 - Tested so far only on Razer Gold Admin Web.
 - "Avengers" is a Marvel trademark: fine for a private or team plugin, rename before any public publish.

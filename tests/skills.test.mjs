@@ -101,12 +101,41 @@ test('hero mode with report false writes no folder, even if the user typed repor
   assert.match(heroSection(), /even if the user typed `report`/);
 });
 
-test('/ask deep is documented as the same as /ironman', () => {
-  assert.match(ask, /`\/ask deep <question>`[^\n]*same as `\/ironman`/);
+test('/ask deep is documented next to /ironman as sharing its opus approval', () => {
+  assert.match(ask, /`\/ask deep <question>`[^\n]*`\/ironman`/);
 });
 
 test('the hero command list in the usage section names all eleven', () => {
   for (const n of ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk', 'thanos', 'antman', 'loki', 'ironman', 'hawkeye', 'spiderman']) {
     assert.ok(ask.includes('`/' + n + '`'), `usage does not list /${n}`);
   }
+});
+
+test('step 7 sends the preset text inside the LENS block and says it replaces conflicting sections', () => {
+  const step7 = ask.split('### 7. Ask the agent')[1].split('### 8.')[0];
+  assert.match(step7, /for a `type: auto` hero, append the hero file text/);
+  assert.match(step7, /instructions replace the Sections and Diagram above when they conflict/);
+  assert.doesNotMatch(heroSection(), /under a line `HERO:`/);
+});
+
+test('the approval question comes in step 7 and the text does not promise that nothing was written before it', () => {
+  const h = heroSection();
+  assert.match(h, /before spawning the explain agent in step 7/);
+  assert.match(h, /onboarding may already have run/);
+  assert.doesNotMatch(h, /nothing runs and nothing is written/);
+});
+
+test('the approval question is asked at most once per run', () => {
+  assert.match(heroSection(), /ask at most once per run/);
+});
+
+test('report false also means no answer.md, and report is the one keyword that does not win', () => {
+  const h = heroSection();
+  assert.match(h, /do not write `answer\.md` either/);
+  assert.match(h, /`report` is the one keyword that does not win/);
+});
+
+test('/ask deep is described as sharing the opus approval, not as identical to /ironman', () => {
+  assert.match(ask, /uses the same opus approval and model as `\/ironman`/);
+  assert.doesNotMatch(ask, /This is the same as `\/ironman`\./);
 });
