@@ -4,13 +4,19 @@
 import { pathToFileURL } from 'node:url';
 import { readFileSync } from 'node:fs';
 
-export const TYPE_ORDER = ['support', 'impact', 'architecture', 'logic', 'workflow'];
+export const TYPE_ORDER = ['support', 'impact', 'deadcode', 'risk', 'architecture', 'logic', 'deepdive', 'workflow'];
+// the explicit phrases of the newer types count double: they are narrow, so one of them is a stronger signal than one weak
+// keyword of an older type (a lone "error" or "rules")
+const NEW_TYPES = new Set(['deadcode', 'risk', 'deepdive']);
 const TYPE_RULES = {
   support: [/\bwhy (would|does|do|did|can't|cannot) (a |the |my )?(user|customer|player|merchant|client)/i, /\berror\b/i, /\bcustomer (says|reports|complain)/i, /\bhow (do|can|should) (i|we) fix\b/i, /\bfailed with\b/i, /\btroubleshoot/i],
-  impact: [/\bwhat (breaks|will break|would break|happens if i (change|remove|delete|rename))\b/i, /\bwho (calls|uses|depends on)\b/i, /\bis it safe to (remove|delete|change|rename)\b/i, /\bblast radius\b/i, /\bimpact of\b/i],
+  impact: [/\bwhat (breaks|will break|would break|happens if i (change|remove|delete|rename))\b/i, /\bwho (calls|uses|depends on)\b/i, /\b(is it|can i|can we) (safely |ok to |okay to )?(safe to )?(remove|delete|change|rename)\b.*\bsafely\b/i, /\b(is it|are we|am i) (safe|ok|okay) to (remove|delete|change|rename|drop)\b/i, /\bis it safe to (remove|delete|change|rename)\b/i, /\bwhat could go wrong if (i|we) (change[sd]?|remove[sd]?|delete[sd]?|rename[sd]?|drop(ped|s)?|touch(ed|es)?|modif(y|ied))\b/i, /\bblast radius\b/i, /\bimpact of\b/i],
   architecture: [/\bhow is .+ (structured|organi[sz]ed|layered)\b/i, /\b(what|which) layers\b/i, /\barchitecture\b/i, /\bhow do .+ (and|&) .+ (connect|talk|communicate|interact)\b/i, /\bhigh[- ]level\b/i],
   logic: [/\brules?\b/i, /\bwhen (does|do|is|are|will)\b/i, /\bwhy does (it|this|the .+) (reject|refuse|fail|block|deny)/i, /\b(validation|eligib|permission)/i],
   workflow: [/\bwhat happens (from|when|after|between)\b/i, /\bwalk me through\b/i, /\bwho does what\b/i, /\bstep[- ]by[- ]step\b/i, /\bflow\b/i, /\bhow does .+ work\b/i],
+  deadcode: [/\b(unused (code|files?|exports?|functions?|classes|methods?|variables?|imports?|config|flags?|routes?|modules?)|anything unused|dead code|never called(?! (back|by|from)\b)|unreferenced|unreachable (code|branch|branches))\b/i, /\bnot (used|referenced|called) anywhere\b/i],
+  risk: [/\bhidden risks?\b/i, /\bwhat could go wrong (in|with|inside)\b/i, /\bsecurity smell\b/i, /\bunchecked (return|result|error|exception|permission)s?\b/i, /\bsilent(ly)? (catch|fail|swallow)/i],
+  deepdive: [/\b(function|method|class|handler|code|calculate\w*|apply\w*|\w+\(\)|\w+_\w+)\b[^.?]{0,40}\bline[- ]by[- ]line\b/i, /\bline[- ]by[- ]line\b[^.?]{0,40}\b(function|method|class)\b/i, /\bline[- ]by[- ]line:\s*\w+/i, /\bwalk through this (function|method|class)\b/i, /\bexplain this (function|method|class)\b/i],
 };
 
 const WHO = {
@@ -31,8 +37,11 @@ const AUDIENCE_RULES = Object.entries(WHO).map(([name, who]) => [name, audienceR
 export function detect(question) {
   // a hero skill may put `hero: <name>` in front of the user's words; it is not part of the question
   const q = String(question ?? '').trim().replace(/^hero:\s*\w+\s*/i, '');
+  // an explicit impact phrase ("is it safe to remove X") always keeps the question, so the double weight below
+  // applies only when no impact rule matched
+  const impactAsked = TYPE_RULES.impact.some((re) => re.test(q));
   const hits = TYPE_ORDER
-    .map((t) => [t, TYPE_RULES[t].filter((re) => re.test(q)).length])
+    .map((t) => [t, TYPE_RULES[t].filter((re) => re.test(q)).length * (NEW_TYPES.has(t) && !impactAsked ? 2 : 1)])
     .filter(([, n]) => n > 0)
     .sort((a, b) => b[1] - a[1]);
   const audience = AUDIENCE_RULES.find(([, res]) => res.some((re) => re.test(q)))?.[0] ?? null;

@@ -13,7 +13,7 @@ for (const f of fixtures) {
     const r = detect(f.q);
     assert.equal(r.type, f.type);
     assert.equal(r.audience, f.audience);
-    if (f.also) assert.equal(r.alsoMatches, f.also);
+    assert.equal(r.alsoMatches, f.also ?? null);
     if (f.unclear) assert.equal(r.unclear, true);
   });
 }

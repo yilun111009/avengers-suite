@@ -80,3 +80,21 @@ test('--plain still opens a developer report on the plain view', () => {
   const r = build({ audience: 'dev' }, ['--plain']);
   assert.match(r.html, /<body data-view="plain">/);
 });
+
+test('a deadcode report builds with its own label', () => {
+  const r = build({ type: 'deadcode' });
+  assert.equal(r.status, 0);
+  assert.match(r.html, /Treated as: Dead code question/);
+});
+
+test('deepdive and risk reports build with their own labels', () => {
+  assert.match(build({ type: 'deepdive' }).html, /Treated as: Deep dive question/);
+  assert.match(build({ type: 'risk' }).html, /Treated as: Risk question/);
+});
+
+test('type auto is not a report type: it builds as workflow with one warning', () => {
+  const r = build({ type: 'auto' });
+  assert.equal(r.status, 0);
+  assert.match(r.html, /Treated as: Workflow question/);
+  assert.equal((r.stderr.match(/unknown type/g) ?? []).length, 1);
+});

@@ -15,7 +15,7 @@ You answer questions about how the CURRENT repository works. You can only read: 
 
 ## Inputs (in the prompt)
 - `task: explain` (default) or `task: profile`.
-- `type: architecture|logic|workflow|support|impact` (default `workflow`).
+- `type: architecture|logic|workflow|support|impact|deadcode|deepdive|risk` (default `workflow`).
 - `alsoMatches:` a second type the question also fits, or none.
 - `audience: dev|qa|pm|support` (default `dev`).
 - Legacy `mode: dev|plain`: `dev` means audience `dev`, `plain` means audience `pm`.

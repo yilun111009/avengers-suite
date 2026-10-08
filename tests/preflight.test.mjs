@@ -7,8 +7,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const script = fileURLToPath(new URL('../engine/check-onboarding.mjs', import.meta.url));
-const HEROES = ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk'];
-const TYPE_OF = { thor: 'architecture', captainamerica: 'logic', drstrange: 'workflow', blackwidow: 'support', hulk: 'impact' };
+const HEROES = ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk', 'thanos', 'antman', 'loki', 'ironman', 'hawkeye', 'spiderman'];
+const TYPE_OF = { thor: 'architecture', captainamerica: 'logic', drstrange: 'workflow', blackwidow: 'support', hulk: 'impact', thanos: 'deadcode', antman: 'deepdive', loki: 'risk', ironman: 'auto', hawkeye: 'auto', spiderman: 'auto' };
 const AUDIENCES = ['dev', 'qa', 'pm', 'support'];
 const SAFE = '# Prompt file\n\nLook at the code and describe what you find.\n';
 
@@ -206,4 +206,29 @@ test('preflight accepts a trailing comment after an unquoted hero value', () => 
 test('the wrong-name failure names the file as well as the field', () => {
   const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('name: hulk', 'name: thanos') }) });
   assert.match(r.failures.find((x) => x.id === 'hero-invalid').problem, /heroes\/hulk\.md/);
+});
+
+test('preflight accepts a hero whose type is auto', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('type: impact', 'type: auto') }) });
+  assert.equal(r.ok, true, JSON.stringify(r.failures));
+});
+
+test('preflight accepts the three new lens types in a hero file', () => {
+  for (const t of ['deadcode', 'deepdive', 'risk']) {
+    const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('type: impact', `type: ${t}`) }) });
+    assert.equal(r.ok, true, `${t}: ${JSON.stringify(r.failures)}`);
+  }
+});
+
+test('preflight still rejects a made-up hero type, and lists auto among the choices', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('type: impact', 'type: banana') }) });
+  const f = r.failures.find((x) => x.id === 'hero-invalid');
+  assert.ok(f, JSON.stringify(r.failures));
+  assert.match(f.problem, /auto/);
+});
+
+test('an auto hero is still scanned for unsafe wording', () => {
+  const text = heroText('hulk', '# Preset\n\nThen delete the old file.\n').replace('type: impact', 'type: auto');
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': text }) });
+  assert.ok(ids(r).includes('prompt-unsafe'));
 });

@@ -8,6 +8,7 @@ import { readFileSync, existsSync, readdirSync, mkdirSync, writeFileSync, unlink
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { HERO_TYPES } from './types.mjs';
 
 const cmd = process.argv[2] ?? 'preflight';
 const root = process.cwd();
@@ -17,8 +18,7 @@ const onboardPath = join(flows, '_onboarding.md');
 // AVENGERS_AGENT_PATH and AVENGERS_PLUGIN_DIR exist so tests can point the checks at fixture files; the checks still apply in full.
 const agentPath = process.env.AVENGERS_AGENT_PATH ?? fileURLToPath(new URL('../agents/repo-avengers.md', import.meta.url));
 const pluginDir = process.env.AVENGERS_PLUGIN_DIR ?? fileURLToPath(new URL('../', import.meta.url));
-const CORE_HEROES = ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk'];
-const KNOWN_TYPES = ['architecture', 'logic', 'workflow', 'support', 'impact'];
+const CORE_HEROES = ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk', 'thanos', 'antman', 'loki', 'ironman', 'hawkeye', 'spiderman'];
 const MODELS = ['sonnet', 'opus', 'haiku'];
 const NON_HERO_SKILLS = new Set(['ask', 'assemble', 'explain']);
 const AUDIENCES = ['dev', 'qa', 'pm', 'support'];
@@ -89,7 +89,7 @@ function heroProblems(name, text) {
   const bad = [];
   if (fm.name !== name) bad.push('name (must equal the file name)');
   if (fm.command !== '/' + name) bad.push('command (must be /' + name + ')');
-  if (!KNOWN_TYPES.includes(fm.type)) bad.push('type (one of ' + KNOWN_TYPES.join(', ') + ')');
+  if (!HERO_TYPES.includes(fm.type)) bad.push('type (one of ' + HERO_TYPES.join(', ') + ')');
   if (!AUDIENCES.includes(fm.audience)) bad.push('audience (one of ' + AUDIENCES.join(', ') + ')');
   if (!MODELS.includes(fm.model)) bad.push('model (one of ' + MODELS.join(', ') + ')');
   if (!['true', 'false'].includes(fm.report)) bad.push('report (true or false)');

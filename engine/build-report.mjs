@@ -3,6 +3,7 @@
 // Renders a self-contained HTML flow report (inline SVG diagram, no external requests).
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { LENS_TYPES, TYPE_LABEL } from './types.mjs';
 
 const [, , inPath, outPath, ...flags] = process.argv;
 if (!inPath || !outPath) {
@@ -10,9 +11,8 @@ if (!inPath || !outPath) {
   process.exit(2);
 }
 const d = JSON.parse(readFileSync(inPath, 'utf8'));
-const KNOWN_TYPES = ['architecture', 'logic', 'workflow', 'support', 'impact'];
+const KNOWN_TYPES = LENS_TYPES;
 const KNOWN_AUDIENCES = ['dev', 'qa', 'pm', 'support'];
-const TYPE_LABEL = { architecture: 'Architecture', logic: 'Logic', workflow: 'Workflow', support: 'Support', impact: 'Impact' };
 const AUDIENCE_LABEL = { dev: 'Developers', qa: 'QA', pm: 'Product', support: 'Support' };
 // reports from before 1.0.0 have neither field: they are workflow questions for developers
 const type = KNOWN_TYPES.includes(d.type) ? d.type : 'workflow';

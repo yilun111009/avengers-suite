@@ -83,3 +83,59 @@ test('hero skills pass the hero marker followed by the user arguments', () => {
 test('step 7 allows the hero model when deep is not set', () => {
   assert.match(ask, /pass no model \(or the hero's model in hero mode\)/);
 });
+
+const heroSection = () => ask.split('## Hero mode')[1].split('## Safety contract')[0];
+
+test('hero mode explains type auto: the router still picks the lens', () => {
+  assert.match(heroSection(), /`type: auto`/);
+  assert.match(heroSection(), /router's type/);
+});
+
+test('hero mode asks before spawning when approval is required, and Cancel stops', () => {
+  assert.match(heroSection(), /`approval: required`/);
+  assert.match(heroSection(), /Cancel/);
+});
+
+test('hero mode with report false writes no folder, even if the user typed report', () => {
+  assert.match(heroSection(), /writes no `docs\/flows\/<slug>\/` folder/);
+  assert.match(heroSection(), /even if the user typed `report`/);
+});
+
+test('/ask deep is documented next to /ironman as sharing its opus approval', () => {
+  assert.match(ask, /`\/ask deep <question>`[^\n]*`\/ironman`/);
+});
+
+test('the hero command list in the usage section names all eleven', () => {
+  for (const n of ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk', 'thanos', 'antman', 'loki', 'ironman', 'hawkeye', 'spiderman']) {
+    assert.ok(ask.includes('`/' + n + '`'), `usage does not list /${n}`);
+  }
+});
+
+test('step 7 sends the preset text inside the LENS block and says it replaces conflicting sections', () => {
+  const step7 = ask.split('### 7. Ask the agent')[1].split('### 8.')[0];
+  assert.match(step7, /for a `type: auto` hero, append the hero file text/);
+  assert.match(step7, /instructions replace the Sections and Diagram above when they conflict/);
+  assert.doesNotMatch(heroSection(), /under a line `HERO:`/);
+});
+
+test('the approval question comes in step 7 and the text does not promise that nothing was written before it', () => {
+  const h = heroSection();
+  assert.match(h, /before spawning the explain agent in step 7/);
+  assert.match(h, /onboarding may already have run/);
+  assert.doesNotMatch(h, /nothing runs and nothing is written/);
+});
+
+test('the approval question is asked at most once per run', () => {
+  assert.match(heroSection(), /ask at most once per run/);
+});
+
+test('report false also means no answer.md, and report is the one keyword that does not win', () => {
+  const h = heroSection();
+  assert.match(h, /do not write `answer\.md` either/);
+  assert.match(h, /`report` is the one keyword that does not win/);
+});
+
+test('/ask deep is described as sharing the opus approval, not as identical to /ironman', () => {
+  assert.match(ask, /uses the same opus approval and model as `\/ironman`/);
+  assert.doesNotMatch(ask, /This is the same as `\/ironman`\./);
+});

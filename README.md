@@ -1,6 +1,6 @@
 # repo-avengers
 
-A Claude Code plugin: ask a question about the repo you are in and get an answer with `file:line` citations plus a self-contained HTML report. It handles five kinds of question and writes for the person who will read the answer.
+A Claude Code plugin: ask a question about the repo you are in and get an answer with `file:line` citations plus a self-contained HTML report. It handles eight kinds of question and writes for the person who will read the answer.
 
 Formerly `rg-repo-explainer` (0.x). See [CHANGELOG.md](CHANGELOG.md).
 
@@ -25,6 +25,9 @@ Upgrading from `rg-repo-explainer`: the plugin name changed, so uninstall the ol
 /ask deep what breaks if I change the Order status enum   # runs the agent on opus, asks you first
 /hulk what breaks if I change the Order status enum   # hero command: impact lens
 /drstrange what happens when a payment fails          # hero command: workflow lens
+/ironman how does the whole refund flow hold together       # opus, asks you first, ends with a systems check
+/hawkeye where is the retry logic                            # haiku, one to three lines, no report
+/thanos is anything unused in the billing module             # candidates for removal; never deletes
 /ask text where is the retry logic                  # no report
 /ask profile                                        # (re)build the saved repo profile
 /ask migrate                                        # move old loose reports into per-question folders
@@ -41,6 +44,9 @@ Upgrading from `rg-repo-explainer`: the plugin name changed, so uninstall the ol
 | Workflow | what happens from checkout to payout | numbered steps with actors, flow diagram |
 | Support | why would a user see error 4012 | symptom to cause table, cause tree |
 | Impact | what breaks if I change the Order status enum | blast-radius list, tests to run, caller graph |
+| Dead code | is anything unused in the billing module | candidates for removal with how each was checked (never deletes) |
+| Deep dive | explain this function line by line: calculateRefund | line-by-line table, inputs and side effects, control flow |
+| Risk | what could go wrong in the payout job | risks ranked by severity, and what was checked and found fine |
 
 Every answer starts with `Treated as: <type> question, for <audience>.` so you can correct it. If the type is unclear it uses workflow and says so.
 
@@ -55,6 +61,14 @@ Each hero is `/ask` with the question type fixed and a default audience. Name an
 | `/drstrange` | workflow | dev |
 | `/blackwidow` | support | support |
 | `/hulk` | impact | dev |
+| `/thanos` | dead code: candidates for removal, never deletes | dev |
+| `/antman` | deep dive: one function, line by line | dev |
+| `/loki` | risk: hidden risks and tricks | dev |
+| `/ironman` | auto (detected as in `/ask`), opus after approval, ends with a systems check | dev |
+| `/hawkeye` | auto, haiku, one to three lines, no report | dev |
+| `/spiderman` | auto, plain language for a newcomer | pm |
+
+Presets (`type: auto`: ironman, hawkeye, spiderman) have no lens of their own; the question type is detected as in `/ask`. `/ask deep` is the same as `/ironman`.
 
 A hero is one file in `heroes/` (frontmatter plus the lens text) and one thin skill in `skills/<name>/`. The intro line is flavour only; it cannot change the rules or the read-only guarantee.
 
@@ -131,5 +145,9 @@ Scripts live in `engine/`, prompts in `heroes/` and `audiences/`, entry points i
 - Cannot read stored procedures, database rows, per-environment config, or other repos; it says so in the Confidence section.
 - Type and audience detection are keyword rules on your wording; a question phrased in an unusual way falls back to workflow and says so.
 - Large monorepos: name the sub-project in the question.
+- Approval questions (`/ironman`, `/ask deep`), the write-path limit and the hero model settings are instructions in the skill text. The only technical barrier is the agent's tool list (`Read, Grep, Glob`).
+- Each hero sets a model on the Agent call. It has not been checked against `CLAUDE_CODE_SUBAGENT_MODEL`: if that variable wins, Hawkeye's haiku and Ironman's opus are silently ignored. Check which model actually ran the first time.
+- Hero personas are flavour. They do not change the investigation rules.
+- On a repo's first use, onboarding runs before the opus approval question, so a cancelled `/ironman` can still leave a repo profile behind.
 - Tested so far only on Razer Gold Admin Web.
 - "Avengers" is a Marvel trademark: fine for a private or team plugin, rename before any public publish.
