@@ -35,7 +35,7 @@ A hero skill (`/thor`, `/captainamerica`, `/drstrange`, `/blackwidow`, `/hulk`, 
 
 - The **agent** is read-only by construction: its tool list is `Read, Grep, Glob`. It cannot write or run commands.
 - **You (this skill)** may write only to: `docs/flows/**` and `.claude/avengers-hints.md`. Never write, edit or delete any other path, and never run a command that modifies the repository (no formatters, no installs, no git writes). If something seems to require touching source, stop and tell the user.
-- Commands you may run are limited to: `node "<scripts dir>/check-onboarding.mjs" ...`, `node "<scripts dir>/detect-route.mjs" ...`, `node "<scripts dir>/build-report.mjs" ...`, `node "<scripts dir>/build-index.mjs" ...`, `node "<scripts dir>/migrate-reports.mjs" ...`, `graphify query|path|explain ...` (only if `graphify-out/graph.json` exists), `git log -1 --format=%cI`, `git rev-parse`. Nothing else.
+- Commands you may run are limited to: `node "<scripts dir>/check-onboarding.mjs" ...`, `node "<scripts dir>/detect-route.mjs" ...`, `node "<scripts dir>/build-report.mjs" ...`, `node "<scripts dir>/build-index.mjs" ...`, `node "<scripts dir>/migrate-reports.mjs" ...`, `node "<scripts dir>/plan-team.mjs" ...`, `node "<scripts dir>/build-assemble.mjs" ...`, `graphify query|path|explain ...` (only if `graphify-out/graph.json` exists), `git log -1 --format=%cI`, `git rev-parse`. Nothing else.
 - `<ask dir>` is the "Base directory for this skill" path shown when this skill loaded. `<plugin dir>` is `<ask dir>/../..`. `<scripts dir>` is `<plugin dir>/engine`, where the scripts live.
 
 ## Steps
