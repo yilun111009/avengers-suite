@@ -73,7 +73,7 @@ Audience:
 Tell the user, in one line before the answer: `Treated as: <type> question, for <audience>.` Add `(couldn't tell, using workflow)` when `unclear` is true, and `also touches <alsoMatches>` when it is not null, so they can correct it.
 
 ### 5. Load the hero prompt and the audience
-Read the hero file in `<plugin dir>/heroes/` whose `type:` equals the detected type (architecture is `thor.md`, logic is `captainamerica.md`, workflow is `drstrange.md`, support is `blackwidow.md`, impact is `hulk.md`) and `<plugin dir>/audiences/<audience>.md`. Use the hero file text after its closing `---` line as the lens. If either file is missing, stop and name the exact path. Never continue with a blank prompt: that would silently drop the format rules.
+Read the hero file in `<plugin dir>/heroes/` whose `type:` equals the detected type (architecture is `thor.md`, logic is `captainamerica.md`, workflow is `drstrange.md`, support is `blackwidow.md`, impact is `hulk.md`, deadcode is `thanos.md`, deepdive is `antman.md`, risk is `loki.md`) and `<plugin dir>/audiences/<audience>.md`. Use the hero file text after its closing `---` line as the lens. If either file is missing, stop and name the exact path. Never continue with a blank prompt: that would silently drop the format rules.
 
 ### 6. Build the context block for the agent
 You prepare facts the agent cannot fetch itself:

@@ -7,8 +7,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const script = fileURLToPath(new URL('../engine/check-onboarding.mjs', import.meta.url));
-const HEROES = ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk'];
-const TYPE_OF = { thor: 'architecture', captainamerica: 'logic', drstrange: 'workflow', blackwidow: 'support', hulk: 'impact' };
+const HEROES = ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk', 'thanos', 'antman', 'loki'];
+const TYPE_OF = { thor: 'architecture', captainamerica: 'logic', drstrange: 'workflow', blackwidow: 'support', hulk: 'impact', thanos: 'deadcode', antman: 'deepdive', loki: 'risk' };
 const AUDIENCES = ['dev', 'qa', 'pm', 'support'];
 const SAFE = '# Prompt file\n\nLook at the code and describe what you find.\n';
 
