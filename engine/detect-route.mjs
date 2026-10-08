@@ -4,13 +4,16 @@
 import { pathToFileURL } from 'node:url';
 import { readFileSync } from 'node:fs';
 
-export const TYPE_ORDER = ['support', 'impact', 'architecture', 'logic', 'workflow'];
+export const TYPE_ORDER = ['support', 'impact', 'deadcode', 'risk', 'architecture', 'logic', 'deepdive', 'workflow'];
 const TYPE_RULES = {
   support: [/\bwhy (would|does|do|did|can't|cannot) (a |the |my )?(user|customer|player|merchant|client)/i, /\berror\b/i, /\bcustomer (says|reports|complain)/i, /\bhow (do|can|should) (i|we) fix\b/i, /\bfailed with\b/i, /\btroubleshoot/i],
   impact: [/\bwhat (breaks|will break|would break|happens if i (change|remove|delete|rename))\b/i, /\bwho (calls|uses|depends on)\b/i, /\bis it safe to (remove|delete|change|rename)\b/i, /\bblast radius\b/i, /\bimpact of\b/i],
   architecture: [/\bhow is .+ (structured|organi[sz]ed|layered)\b/i, /\b(what|which) layers\b/i, /\barchitecture\b/i, /\bhow do .+ (and|&) .+ (connect|talk|communicate|interact)\b/i, /\bhigh[- ]level\b/i],
   logic: [/\brules?\b/i, /\bwhen (does|do|is|are|will)\b/i, /\bwhy does (it|this|the .+) (reject|refuse|fail|block|deny)/i, /\b(validation|eligib|permission)/i],
   workflow: [/\bwhat happens (from|when|after|between)\b/i, /\bwalk me through\b/i, /\bwho does what\b/i, /\bstep[- ]by[- ]step\b/i, /\bflow\b/i, /\bhow does .+ work\b/i],
+  deadcode: [/\b(unused (code|files?|exports?|functions?|classes|methods?|variables?|imports?|config|flags?|routes?|modules?)|anything unused|dead code|never called|unreferenced|unreachable (code|branch|branches))\b/i, /\bnot (used|referenced|called) anywhere\b/i],
+  risk: [/\bhidden risks?\b/i, /\bwhat could go wrong\b/i, /\bsecurity smell\b/i, /\bunchecked (return|result|error|exception|input|permission)s?\b/i, /\bsilent(ly)? (catch|fail|swallow)/i],
+  deepdive: [/\bline[- ]by[- ]line\b/i, /\bwalk through this (function|method|class)\b/i, /\bexplain this (function|method|class)\b/i],
 };
 
 const WHO = {
