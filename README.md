@@ -73,6 +73,44 @@ Presets (`type: auto`: ironman, hawkeye, spiderman) have no lens of their own; t
 
 A hero is one file in `heroes/` (frontmatter plus the lens text) and one thin skill in `skills/<name>/`. The intro line is flavour only; it cannot change the rules or the read-only guarantee.
 
+### Try each command
+
+Copy a line, replace the question with one about your own repo, and run it in Claude Code from the repo's root. The first run in a repo does a one-time onboarding (see below).
+
+```
+/thor how is the billing module structured                      # architecture: layers, boundaries, a component diagram
+/captainamerica what are the rules for refunds                  # logic: a decision table and the edge cases
+/drstrange what happens from checkout to payout                 # workflow: numbered steps, success path and every failure branch
+/blackwidow why would a user see error 4012                     # support: symptom, likely cause, what to check, who to escalate to
+/hulk what breaks if I change the Order status enum             # impact: blast radius ranked by risk, tests to run
+/thanos is anything unused in the billing module                # dead code: candidates for removal, never deletes anything
+/antman explain this function line by line: calculateRefund     # deep dive: one function, its branches, errors and side effects
+/loki what could go wrong in the payout job                     # risk: missing checks, ignored errors, swallowed failures
+/ironman how does the whole refund flow hold together           # thorough: opus, asks you first, ends with a systems check
+/hawkeye where is the retry logic                               # quick lookup: one to three lines with path:line, no report
+/spiderman how does checkout work                               # plain language for a newcomer, no code names
+/assemble how does the refund flow work and what could break it # Fury plans a team of heroes, you approve it, you get one merged report
+```
+
+Which one to use:
+
+- **Not sure which lens fits?** Use plain `/ask <question>`. It picks the lens from your wording and prints `Treated as: <type> question, for <audience>.` first so you can correct it.
+- **You know what you want?** Use the hero. It fixes the lens, so the answer always has that shape.
+- **A question that needs several lenses** (structure, impact and risk of the same feature)? Use `/assemble`. It costs several times a normal `/ask`, which is why it shows you the plan and asks first.
+- **Just finding something?** `/hawkeye` is the cheapest and writes no report.
+
+Naming an audience, so the answer is written for someone other than a developer. Put it in the question and you are not asked:
+
+```
+/hulk for qa what breaks if I change the Order status enum
+/blackwidow for support why would a user see error 4012
+/drstrange explain to the PM what happens when a payment fails
+/ask plain how does checkout work                               # plain language, same as the PM audience
+/ask text where is the retry logic                              # answer only, no report file
+```
+
+Answers for QA, PM and support use no code names in the body and end with source references for a developer to check before forwarding.
+
 ### Assemble (Fury)
 
 `/assemble <goal>` plans a team instead of answering directly. Fury splits the goal into sub-questions, picks a hero for each and a model for each, and shows you the plan before anything runs:

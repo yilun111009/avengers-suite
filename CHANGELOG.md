@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1 - 2026-10-08
+
+### Added
+- README: a "Try each command" section with a ready-to-copy example for every hero command and for `/assemble`, a short guide to which one to use when, and the working ways to name an audience (`/hulk for qa ...`, `explain to the PM ...`, `for support ...`, `plain`, `text`). Every example was checked against the router, and a test fails if an example goes missing.
+
 ## 1.5.0 - 2026-10-08
 
 ### Added

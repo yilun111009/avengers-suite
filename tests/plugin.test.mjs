@@ -5,10 +5,10 @@ import { fileURLToPath } from 'node:url';
 
 const read = (p) => readFileSync(fileURLToPath(new URL(`../${p}`, import.meta.url)), 'utf8');
 
-test('plugin.json is repo-avengers 1.5.0', () => {
+test('plugin.json is repo-avengers 1.5.1', () => {
   const p = JSON.parse(read('.claude-plugin/plugin.json'));
   assert.equal(p.name, 'repo-avengers');
-  assert.equal(p.version, '1.5.0');
+  assert.equal(p.version, '1.5.1');
 });
 
 test('marketplace keeps the id rg-local and lists repo-avengers', () => {
@@ -34,10 +34,10 @@ test('the README names the new plugin and keeps the upgrade note', () => {
   assert.ok(r.includes('/plugin uninstall rg-repo-explainer@rg-local'));
 });
 
-test('the changelog has a 1.5.0 entry on top and keeps every earlier version', () => {
+test('the changelog has a 1.5.1 entry on top and keeps every earlier version', () => {
   const c = read('CHANGELOG.md').replace(/\r\n/g, '\n');
-  assert.match(c, /^# Changelog\n\n## 1\.5\.0 /);
-  for (const v of ['1.4.0', '1.3.0', '1.2.0', '1.1.0', '1.0.0']) assert.ok(c.includes(`\n## ${v} `), `changelog lost ${v}`);
+  assert.match(c, /^# Changelog\n\n## 1\.5\.1 /);
+  for (const v of ['1.5.0', '1.4.0', '1.3.0', '1.2.0', '1.1.0', '1.0.0']) assert.ok(c.includes(`\n## ${v} `), `changelog lost ${v}`);
 });
 
 test('the README documents report themes, the themes folder and the limits', () => {
@@ -71,4 +71,34 @@ test('the scripts live in engine/, not skills/explain/', () => {
     assert.ok(existsSync(fileURLToPath(new URL(`../engine/${f}.mjs`, import.meta.url))), `engine/${f}.mjs is missing`);
     assert.ok(!existsSync(fileURLToPath(new URL(`../skills/explain/${f}.mjs`, import.meta.url))), `skills/explain/${f}.mjs should have moved`);
   }
+});
+
+test('the README gives a ready-to-copy example for every hero command and for /assemble', () => {
+  const r = read('README.md').replace(/\r\n/g, '\n');
+  const section = r.split('### Try each command')[1]?.split('\n### ')[0] ?? '';
+  assert.ok(section, 'README has no "Try each command" section');
+  for (const hero of ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk', 'thanos', 'antman', 'loki', 'ironman', 'hawkeye', 'spiderman', 'assemble']) {
+    assert.match(section, new RegExp('^/' + hero + ' [^ ]', 'm'), 'no example line for /' + hero);
+  }
+});
+
+test('every hero example in the README is a command that exists, with a question after it', () => {
+  const r = read('README.md').replace(/\r\n/g, '\n');
+  const section = r.split('### Try each command')[1]?.split('\n### ')[0] ?? '';
+  const known = new Set(['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk', 'thanos', 'antman', 'loki', 'ironman', 'hawkeye', 'spiderman', 'assemble', 'ask']);
+  const lines = section.split('\n').filter((l) => /^\/[a-z]+ /.test(l));
+  assert.ok(lines.length >= 12, 'expected at least 12 example lines, got ' + lines.length);
+  for (const l of lines) {
+    const cmd = l.slice(1).split(' ')[0];
+    assert.ok(known.has(cmd), 'unknown command in example: ' + l);
+    assert.ok(l.replace(/#.*$/, '').trim().split(' ').length >= 3, 'example has no real question: ' + l);
+  }
+});
+
+test('the README explains how to name an audience, with the working phrasings', () => {
+  const r = read('README.md').replace(/\r\n/g, '\n');
+  const section = r.split('### Try each command')[1]?.split('\n### ')[0] ?? '';
+  assert.match(section, /\/hulk for qa /);
+  assert.match(section, /explain to the PM/);
+  assert.match(section, /for support /);
 });
