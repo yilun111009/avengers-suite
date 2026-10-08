@@ -5,4 +5,4 @@ description: Thor maps how the current repo is structured: layers, boundaries an
 
 # thor
 
-Invoke the `ask` skill (use the exact name in the skill list; it may carry a plugin prefix) in hero mode with `hero: thor` and exactly the arguments given here, and follow it. All settings for this hero are in `heroes/thor.md`; do not copy them here.
+Invoke the `ask` skill (use the exact name in the skill list; it may carry a plugin prefix) in hero mode, passing `hero: thor` followed by exactly the arguments given here, and follow it. All settings for this hero are in `heroes/thor.md`; do not copy them here.

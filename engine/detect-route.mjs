@@ -29,7 +29,8 @@ const audienceRes = (who) => [
 const AUDIENCE_RULES = Object.entries(WHO).map(([name, who]) => [name, audienceRes(who)]);
 
 export function detect(question) {
-  const q = String(question ?? '').trim();
+  // a hero skill may put `hero: <name>` in front of the user's words; it is not part of the question
+  const q = String(question ?? '').trim().replace(/^hero:\s*\w+\s*/i, '');
   const hits = TYPE_ORDER
     .map((t) => [t, TYPE_RULES[t].filter((re) => re.test(q)).length])
     .filter(([, n]) => n > 0)

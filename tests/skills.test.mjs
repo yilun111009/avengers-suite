@@ -62,3 +62,23 @@ test('ask skill documents hero mode, and a named audience still wins', () => {
   assert.match(ask, /named audience in the question/);
   assert.ok(ask.includes('heroes/<name>.md'));
 });
+
+test('hero mode strips the hero marker first and lets the user keywords win', () => {
+  const hero = ask.replace(/\r\n/g, '\n').split('## Hero mode')[1].split('## Safety contract')[0];
+  assert.match(hero, /arguments start with `hero: <name>`/);
+  assert.match(hero, /Remove that token/);
+  assert.match(hero, /user's keywords win/);
+  assert.match(hero, /`plain` gives `pm`/);
+  assert.match(hero, /`text` gives no report/);
+  assert.match(hero, /`deep` triggers the step 7 opus approval/);
+});
+
+test('hero skills pass the hero marker followed by the user arguments', () => {
+  for (const n of heroNames) {
+    assert.ok(read(`skills/${n}/SKILL.md`).includes(`\`hero: ${n}\` followed by`), `${n} skill must say hero marker followed by the arguments`);
+  }
+});
+
+test('step 7 allows the hero model when deep is not set', () => {
+  assert.match(ask, /pass no model \(or the hero's model in hero mode\)/);
+});

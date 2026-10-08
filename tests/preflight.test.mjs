@@ -192,3 +192,18 @@ test('preflight ignores the ask, assemble and explain skill folders', () => {
   const plugin = makePlugin({ 'skills/ask': '# ask\n', 'skills/assemble': '# assemble\n', 'skills/explain': '# explain\n' });
   assert.equal(preflight({ plugin }).ok, true);
 });
+
+test('preflight accepts a hero file that starts with a byte-order mark', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': '\uFEFF' + heroText('hulk') }) });
+  assert.equal(r.ok, true, JSON.stringify(r.failures));
+});
+
+test('preflight accepts a trailing comment after an unquoted hero value', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('model: sonnet', 'model: sonnet   # sonnet | opus | haiku') }) });
+  assert.equal(r.ok, true, JSON.stringify(r.failures));
+});
+
+test('the wrong-name failure names the file as well as the field', () => {
+  const r = preflight({ plugin: makePlugin({ 'heroes/hulk': heroText('hulk').replace('name: hulk', 'name: thanos') }) });
+  assert.match(r.failures.find((x) => x.id === 'hero-invalid').problem, /heroes\/hulk\.md/);
+});

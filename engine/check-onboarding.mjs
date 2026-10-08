@@ -61,12 +61,15 @@ const UNSAFE_PATTERNS = [
   [/\b(git\s+(commit|push|checkout|reset)|npm\s+(install|run))\b/i, 'names a modifying command'],
 ];
 function frontmatter(text) {
-  const m = text.replace(/\r\n/g, '\n').match(/^---\n([\s\S]*?)\n---/);
+  const m = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').match(/^---\n([\s\S]*?)\n---/);
   if (!m) return null;
   const o = {};
   for (const line of m[1].split('\n')) {
     const kv = line.match(/^([A-Za-z]+):\s*(.*)$/);
-    if (kv) o[kv[1]] = kv[2].trim().replace(/^"(.*)"$/, '$1');
+    if (!kv) continue;
+    const raw = kv[2].trim();
+    // a quoted value keeps everything inside the quotes; an unquoted one may end with a `# comment`
+    o[kv[1]] = raw.startsWith('"') ? raw.replace(/^"(.*)"\s*(#.*)?$/, '$1') : raw.replace(/\s+#.*$/, '');
   }
   return o;
 }

@@ -5,4 +5,4 @@ description: Captain America checks the rules in the current repo: what is allow
 
 # captainamerica
 
-Invoke the `ask` skill (use the exact name in the skill list; it may carry a plugin prefix) in hero mode with `hero: captainamerica` and exactly the arguments given here, and follow it. All settings for this hero are in `heroes/captainamerica.md`; do not copy them here.
+Invoke the `ask` skill (use the exact name in the skill list; it may carry a plugin prefix) in hero mode, passing `hero: captainamerica` followed by exactly the arguments given here, and follow it. All settings for this hero are in `heroes/captainamerica.md`; do not copy them here.
