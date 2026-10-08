@@ -381,10 +381,10 @@ Replace the comment and `promptProblems` function (from the line `// Lens and au
 // Hero and audience files are instructions placed in the agent's prompt. They must exist, and must not name tools
 // or tell the agent to run or change anything. Best-effort text scan, like the secret scan in build-report.mjs.
 const UNSAFE_PATTERNS = [
-  [/(Bash|PowerShell|NotebookEdit|WebFetch|WebSearch|Write|Edit)/, 'names a tool'],
-  [/(run|execute|invoke)\s+(a |an |the |any )?(shell|command|script|program|tool)s?/i, 'tells the agent to run something'],
-  [/(create|modify|delete|overwrite|rename)\s+(?:(?:a|an|the|any|this|that|old|new|existing|local|temporary)\s+){0,3}(file|files|folder|folders|director(y|ies))/i, 'tells the agent to change files'],
-  [/(git\s+(commit|push|checkout|reset)|npm\s+(install|run))/i, 'names a modifying command'],
+  [/\b(Bash|PowerShell|NotebookEdit|WebFetch|WebSearch|Write|Edit)\b/, 'names a tool'],
+  [/\b(run|execute|invoke)\s+(a |an |the |any )?(shell|command|script|program|tool)s?\b/i, 'tells the agent to run something'],
+  [/\b(create|modify|delete|overwrite|rename)\s+(?:(?:a|an|the|any|this|that|old|new|existing|local|temporary)\s+){0,3}(file|files|folder|folders|director(y|ies))\b/i, 'tells the agent to change files'],
+  [/\b(git\s+(commit|push|checkout|reset)|npm\s+(install|run))\b/i, 'names a modifying command'],
 ];
 
 function frontmatter(text) {
