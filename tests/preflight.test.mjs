@@ -20,6 +20,12 @@ function makeRepo() {
 function heroText(name, body = SAFE) {
   return ['---', `name: ${name}`, `command: /${name}`, `type: ${TYPE_OF[name]}`, 'audience: dev', 'model: sonnet', 'report: true', 'approval: none', 'intro: "Ready."', '---', body].join('\n');
 }
+const THEME_COLOURS = { thor: ['#0d6ea8', '#7cc4f2'], captainamerica: ['#1c3f94', '#9db7ff'], drstrange: ['#a85a00', '#ffb454'], blackwidow: ['#a3004f', '#ff7fb0'], hulk: ['#2e7d32', '#7bd88f'], thanos: ['#6a1b9a', '#d49cff'], antman: ['#6d6a00', '#d8d36a'], loki: ['#00796b', '#5fdccb'], ironman: ['#b71c1c', '#ff8a80'], hawkeye: ['#4a3fa0', '#b9b0ff'], spiderman: ['#c13a14', '#ff9a73'], fury: ['#4a4a4a', '#c4c4c4'] };
+function themeText(name, over = {}) {
+  const [a, d] = THEME_COLOURS[name] ?? ['#2e7d32', '#7bd88f'];
+  const f = { name, accent: a, accentDark: d, emblem: 'fist', tagline: 'A short line.', ...over };
+  return ['---', `name: ${f.name}`, `accent: ${JSON.stringify(f.accent)}`, `accentDark: ${JSON.stringify(f.accentDark)}`, `emblem: ${f.emblem}`, `tagline: ${JSON.stringify(f.tagline)}`, '---', ''].join('\n');
+}
 // overrides: { 'heroes/hulk': 'text' } replaces a file; a null value leaves it out;
 // { 'skills/stray': 'text' } adds a skill folder that has no hero.
 function makePlugin(overrides = {}) {
@@ -37,6 +43,14 @@ function makePlugin(overrides = {}) {
     const ak = `audiences/${n}`;
     const at = ak in overrides ? overrides[ak] : SAFE;
     if (at !== null) put(`${ak}.md`, at);
+  }
+  for (const n of [...HEROES, 'fury']) {
+    const tk = `themes/${n}`;
+    const tt = tk in overrides ? overrides[tk] : themeText(n);
+    if (tt !== null) put(`${tk}.md`, tt);
+  }
+  for (const k of Object.keys(overrides)) {
+    if (k.startsWith('themes/') && ![...HEROES, 'fury'].some((h) => k === `themes/${h}`)) put(`${k}.md`, overrides[k]);
   }
   for (const k of Object.keys(overrides)) {
     if (k.startsWith('skills/') && !HEROES.some((h) => k === `skills/${h}`)) put(`${k}/SKILL.md`, overrides[k]);
@@ -231,4 +245,40 @@ test('an auto hero is still scanned for unsafe wording', () => {
   const text = heroText('hulk', '# Preset\n\nThen delete the old file.\n').replace('type: impact', 'type: auto');
   const r = preflight({ plugin: makePlugin({ 'heroes/hulk': text }) });
   assert.ok(ids(r).includes('prompt-unsafe'));
+});
+
+test('preflight fails when a hero has no theme, and names the theme file', () => {
+  const r = preflight({ plugin: makePlugin({ 'themes/hulk': null }) });
+  const f = r.failures.find((x) => x.id === 'theme-missing');
+  assert.ok(f, JSON.stringify(r.failures));
+  assert.match(f.problem, /themes[\\/]hulk\.md/);
+});
+
+test('preflight fails when fury has no theme', () => {
+  assert.ok(ids(preflight({ plugin: makePlugin({ 'themes/fury': null }) })).includes('theme-missing'));
+});
+
+test('preflight fails on a theme with low contrast and says the ratio and the file', () => {
+  const r = preflight({ plugin: makePlugin({ 'themes/hulk': themeText('hulk', { accent: '#f9a825' }) }) });
+  const f = r.failures.find((x) => x.id === 'theme-invalid');
+  assert.ok(f, JSON.stringify(r.failures));
+  assert.match(f.problem, /hulk\.md/);
+  assert.match(f.problem, /1\.9\d/);
+});
+
+test('preflight fails on a bad emblem, a non-hex colour and an over-long tagline', () => {
+  for (const bad of [{ emblem: 'banana' }, { accent: 'green' }, { tagline: 'x'.repeat(101) }]) {
+    assert.ok(ids(preflight({ plugin: makePlugin({ 'themes/hulk': themeText('hulk', bad) }) })).includes('theme-invalid'), JSON.stringify(bad));
+  }
+});
+
+test('preflight fails on a theme that has no hero, except fury', () => {
+  const r = preflight({ plugin: makePlugin({ 'themes/stranger': themeText('stranger') }) });
+  assert.ok(ids(r).includes('theme-orphan'), JSON.stringify(r.failures));
+});
+
+test('preflight only warns when two coloured themes are within 12 degrees of hue', () => {
+  const r = preflight({ plugin: makePlugin({ 'themes/thor': themeText('thor', { accent: '#b71c1c', accentDark: '#ff8a80' }), 'themes/ironman': themeText('ironman', { accent: '#b71c1c', accentDark: '#ff8a80' }) }) });
+  assert.equal(r.ok, true, JSON.stringify(r.failures));
+  assert.ok(r.warnings.some((w) => w.id === 'theme-similar'), JSON.stringify(r.warnings));
 });

@@ -133,3 +133,41 @@ test('a name that points at a real valid theme file outside themes/ is still ref
     assert.equal(readTheme(name, d), null, JSON.stringify(name));
   }
 });
+
+import { readdirSync, readFileSync } from 'node:fs';
+
+const root = fileURLToPath(new URL('../', import.meta.url));
+const HEROES = ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk', 'thanos', 'antman', 'loki', 'ironman', 'hawkeye', 'spiderman'];
+
+test('there is a theme for every hero plus fury, and no other', () => {
+  const names = readdirSync(join(root, 'themes')).filter((f) => f.endsWith('.md')).map((f) => f.slice(0, -3)).sort();
+  assert.deepEqual(names, [...HEROES, 'fury'].sort());
+});
+
+test('every shipped theme is valid and passes the contrast rule', () => {
+  for (const n of [...HEROES, 'fury']) {
+    const text = readFileSync(join(root, 'themes', `${n}.md`), 'utf8');
+    assert.deepEqual(themeProblems(n, text), [], n);
+  }
+});
+
+test('the shipped themes use twelve different emblems', () => {
+  const emblems = [...HEROES, 'fury'].map((n) => parseFrontmatter(readFileSync(join(root, 'themes', `${n}.md`), 'utf8')).emblem);
+  assert.equal(new Set(emblems).size, 12);
+});
+
+test('no two coloured shipped themes sit within 12 degrees of hue (grey is exempt)', () => {
+  const light = [...HEROES, 'fury'].map((n) => [n, parseFrontmatter(readFileSync(join(root, 'themes', `${n}.md`), 'utf8')).accent]).filter(([, c]) => saturation(c) >= 0.1);
+  for (let i = 0; i < light.length; i++) for (let j = i + 1; j < light.length; j++) {
+    const d = Math.min(Math.abs(hue(light[i][1]) - hue(light[j][1])), 360 - Math.abs(hue(light[i][1]) - hue(light[j][1])));
+    assert.ok(d > 12, `${light[i][0]} and ${light[j][0]} are only ${d} degrees apart`);
+  }
+});
+
+test('the shipped taglines are one line, a sensible length, and name no tool', () => {
+  for (const n of [...HEROES, 'fury']) {
+    const fm = parseFrontmatter(readFileSync(join(root, 'themes', `${n}.md`), 'utf8'));
+    assert.ok(fm.tagline.length >= 8 && fm.tagline.length <= 100, n);
+    assert.doesNotMatch(fm.tagline, /\b(Bash|PowerShell|NotebookEdit|WebFetch|WebSearch|Write|Edit)\b/, n);
+  }
+});
