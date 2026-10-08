@@ -14,10 +14,13 @@ const root = process.cwd();
 const flows = join(root, 'docs', 'flows');
 const profilePath = join(flows, '_repo-profile.md');
 const onboardPath = join(flows, '_onboarding.md');
-// AVENGERS_AGENT_PATH and AVENGERS_ASK_DIR exist so tests can point the checks at fixture files; the checks still apply in full.
-const agentPath = process.env.AVENGERS_AGENT_PATH ?? fileURLToPath(new URL('../../agents/repo-avengers.md', import.meta.url));
-const askDir = process.env.AVENGERS_ASK_DIR ?? fileURLToPath(new URL('../ask/', import.meta.url));
-const LENSES = ['architecture', 'logic', 'workflow', 'support', 'impact'];
+// AVENGERS_AGENT_PATH and AVENGERS_PLUGIN_DIR exist so tests can point the checks at fixture files; the checks still apply in full.
+const agentPath = process.env.AVENGERS_AGENT_PATH ?? fileURLToPath(new URL('../agents/repo-avengers.md', import.meta.url));
+const pluginDir = process.env.AVENGERS_PLUGIN_DIR ?? fileURLToPath(new URL('../', import.meta.url));
+const CORE_HEROES = ['thor', 'captainamerica', 'drstrange', 'blackwidow', 'hulk'];
+const KNOWN_TYPES = ['architecture', 'logic', 'workflow', 'support', 'impact'];
+const MODELS = ['sonnet', 'opus', 'haiku'];
+const NON_HERO_SKILLS = new Set(['ask', 'assemble', 'explain']);
 const AUDIENCES = ['dev', 'qa', 'pm', 'support'];
 const ALLOWED_TOOLS = new Set(['Read', 'Grep', 'Glob']);
 const SRC_EXT = /\.(cs|ts|tsx|js|jsx|mjs|py|java|kt|go|rs|rb|php|swift|scala|c|cc|cpp|h|sql|vue|svelte)$/i;
@@ -49,7 +52,7 @@ function agentTools() {
   return { tools: lines.flatMap((l) => l[1].split(',')).map((s) => s.trim()).filter(Boolean) };
 }
 
-// Lens and audience files are instructions placed in the agent's prompt. They must exist, and must not name tools
+// Hero and audience files are instructions placed in the agent's prompt. They must exist, and must not name tools
 // or tell the agent to run or change anything. Best-effort text scan, like the secret scan in build-report.mjs.
 const UNSAFE_PATTERNS = [
   [/\b(Bash|PowerShell|NotebookEdit|WebFetch|WebSearch|Write|Edit)\b/, 'names a tool'],
@@ -57,20 +60,75 @@ const UNSAFE_PATTERNS = [
   [/\b(create|modify|delete|overwrite|rename)\s+(?:(?:a|an|the|any|this|that|old|new|existing|local|temporary)\s+){0,3}(file|files|folder|folders|director(y|ies))\b/i, 'tells the agent to change files'],
   [/\b(git\s+(commit|push|checkout|reset)|npm\s+(install|run))\b/i, 'names a modifying command'],
 ];
+function frontmatter(text) {
+  const m = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').match(/^---\n([\s\S]*?)\n---/);
+  if (!m) return null;
+  const o = {};
+  for (const line of m[1].split('\n')) {
+    const kv = line.match(/^([A-Za-z]+):\s*(.*)$/);
+    if (!kv) continue;
+    const raw = kv[2].trim();
+    // a quoted value keeps everything inside the quotes; an unquoted one may end with a `# comment`
+    o[kv[1]] = raw.startsWith('"') ? raw.replace(/^"(.*)"\s*(#.*)?$/, '$1') : raw.replace(/\s+#.*$/, '');
+  }
+  return o;
+}
+
+// every hero that must exist (the core five) plus any other file in heroes/
+function heroFiles() {
+  const dir = join(pluginDir, 'heroes');
+  const found = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.md')).map((f) => f.slice(0, -3)) : [];
+  return [...new Set([...CORE_HEROES, ...found])];
+}
+
+function heroProblems(name, text) {
+  const fm = frontmatter(text);
+  const file = `heroes/${name}.md`;
+  const fix = `Fix the frontmatter of ${file}: name, command, type, audience, model, report, approval and intro are all required.`;
+  if (!fm) return [{ id: 'hero-invalid', problem: `${file} has no frontmatter.`, fix }];
+  const bad = [];
+  if (fm.name !== name) bad.push('name (must equal the file name)');
+  if (fm.command !== '/' + name) bad.push('command (must be /' + name + ')');
+  if (!KNOWN_TYPES.includes(fm.type)) bad.push('type (one of ' + KNOWN_TYPES.join(', ') + ')');
+  if (!AUDIENCES.includes(fm.audience)) bad.push('audience (one of ' + AUDIENCES.join(', ') + ')');
+  if (!MODELS.includes(fm.model)) bad.push('model (one of ' + MODELS.join(', ') + ')');
+  if (!['true', 'false'].includes(fm.report)) bad.push('report (true or false)');
+  if (!['none', 'required'].includes(fm.approval)) bad.push('approval (none or required)');
+  if (!fm.intro) bad.push('intro (one line)');
+  return bad.length ? [{ id: 'hero-invalid', problem: `${file} has invalid frontmatter: ${bad.join('; ')}.`, fix }] : [];
+}
+
+// every hero needs a skill (or /<hero> would not exist) and every skill folder except the known non-hero ones needs a hero
+function pairingProblems() {
+  const found = [];
+  const skillsDir = join(pluginDir, 'skills');
+  if (!existsSync(skillsDir)) return found;
+  const heroes = heroFiles();
+  for (const name of heroes) {
+    if (!existsSync(join(skillsDir, name, 'SKILL.md'))) found.push({ id: 'hero-unpaired', problem: `heroes/${name}.md has no skills/${name}/SKILL.md, so /${name} would not exist.`, fix: `Add skills/${name}/SKILL.md (copy a thin hero skill) or remove heroes/${name}.md.` });
+  }
+  for (const d of readdirSync(skillsDir, { withFileTypes: true })) {
+    if (d.isDirectory() && !NON_HERO_SKILLS.has(d.name) && !heroes.includes(d.name)) found.push({ id: 'hero-unpaired', problem: `skills/${d.name}/ has no heroes/${d.name}.md.`, fix: `Add heroes/${d.name}.md or remove skills/${d.name}/.` });
+  }
+  return found;
+}
+
 function promptProblems() {
   const found = [];
-  const expected = [...LENSES.map((n) => ['lenses', n]), ...AUDIENCES.map((n) => ['audiences', n])];
+  const expected = [...heroFiles().map((n) => ['heroes', n]), ...AUDIENCES.map((n) => ['audiences', n])];
   for (const [dir, name] of expected) {
-    const p = join(askDir, dir, name + '.md');
+    const p = join(pluginDir, dir, name + '.md');
     if (!existsSync(p)) {
-      found.push({ id: 'lens-missing', problem: 'Missing prompt file: ' + p, fix: 'Restore ' + dir + '/' + name + '.md in the ask skill folder.' });
+      found.push({ id: 'prompt-missing', problem: 'Missing prompt file: ' + p, fix: 'Restore ' + dir + '/' + name + '.md in the plugin folder.' });
       continue;
     }
     const text = readFileSync(p, 'utf8');
     for (const [re, why] of UNSAFE_PATTERNS) {
-      if (re.test(text)) found.push({ id: 'lens-unsafe', problem: dir + '/' + name + '.md ' + why + '.', fix: 'Edit ' + dir + '/' + name + '.md so it only says what to look for and how to write the answer.' });
+      if (re.test(text)) found.push({ id: 'prompt-unsafe', problem: dir + '/' + name + '.md ' + why + '.', fix: 'Edit ' + dir + '/' + name + '.md so it only says what to look for and how to write the answer.' });
     }
+    if (dir === 'heroes') found.push(...heroProblems(name, text));
   }
+  found.push(...pairingProblems());
   return found;
 }
 

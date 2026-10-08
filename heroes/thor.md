@@ -1,3 +1,13 @@
+---
+name: thor
+command: /thor
+type: architecture
+audience: dev
+model: sonnet
+report: true
+approval: none
+intro: "Thor is mapping the realms of this repo..."
+---
 # Lens: architecture
 
 The question is about how the system is put together.

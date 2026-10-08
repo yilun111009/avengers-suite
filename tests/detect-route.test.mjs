@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { detect } from '../skills/explain/detect-route.mjs';
+import { detect } from '../engine/detect-route.mjs';
 
 const fixtures = JSON.parse(readFileSync(new URL('./routing-fixtures.json', import.meta.url), 'utf8'));
-const script = fileURLToPath(new URL('../skills/explain/detect-route.mjs', import.meta.url));
+const script = fileURLToPath(new URL('../engine/detect-route.mjs', import.meta.url));
 
 for (const f of fixtures) {
   test(`route: ${JSON.stringify(f.q)}`, () => {
@@ -34,4 +34,10 @@ test('route: CLI reads the question from stdin, so shell characters in it are in
   const r = spawnSync(process.execPath, [script], { input: q, encoding: 'utf8' });
   assert.equal(r.status, 0);
   assert.equal(JSON.parse(r.stdout).type, 'impact');
+});
+
+test('route: a leading hero marker is ignored, so a named audience is still found', () => {
+  assert.equal(detect('hero: hulk for qa what breaks if I change the Order enum').audience, 'qa');
+  assert.equal(detect('hero: hulk for qa what breaks if I change the Order enum').type, 'impact');
+  assert.equal(detect('hero: hulk what breaks if I change the Order enum').audience, null);
 });

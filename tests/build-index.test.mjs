@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const script = fileURLToPath(new URL('../skills/explain/build-index.mjs', import.meta.url));
+const script = fileURLToPath(new URL('../engine/build-index.mjs', import.meta.url));
 
 function buildIndex(reports) {
   const flows = join(mkdtempSync(join(tmpdir(), 'avengers-index-')), 'docs', 'flows');

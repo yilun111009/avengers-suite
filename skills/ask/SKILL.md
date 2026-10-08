@@ -10,17 +10,29 @@ Usage:
 - `/ask for qa <question>` / `/ask explain to the PM <question>`: name the audience in the question and you are not asked.
 - `/ask plain <question>`: non-technical answer (treated as the PM audience)
 - `/ask deep <question>`: same answer and report, but the agent runs on the opus model for harder questions, after you approve it (default is the agent's own model, sonnet)
+- `/thor`, `/captainamerica`, `/drstrange`, `/blackwidow`, `/hulk` `<question>`: the same as `/ask`, with the question type fixed to the hero's lens and the hero's default audience
 - `/ask text <question>`: answer only, no report
 - `/ask onboard` / `/ask onboard --force`: run (or redo) onboarding only
 - `/ask profile`: rebuild the repo profile only
 - `/ask migrate`: move old loose reports (`docs/flows/<slug>.html/.json`) into per-question folders
+
+## Hero mode
+
+A hero skill (`/thor`, `/captainamerica`, `/drstrange`, `/blackwidow`, `/hulk`) invokes this skill so that the arguments start with `hero: <name>` followed by the user's own words. In hero mode:
+1. Remove that token first, then run step 1 (keywords) and the router on the rest, so that a leading `for qa` or `plain` is still seen as the user's own words.
+2. Read `<plugin dir>/heroes/<name>.md`. Print its `intro` line first. Its `type`, `audience`, `model`, `report` and `approval` replace the detected defaults.
+3. Skip the type detection in step 4. Still run the router for the audience only: a named audience in the question (for example `/hulk for qa ...`) wins over the hero's default audience. When the hero file sets an audience and none is named, use it and do not ask the audience question.
+4. Pass the hero's `model` on the Agent call. If `approval: required`, ask for approval first, exactly as for `deep` in step 7.
+5. `report: false` means the same as `text`.
+6. The user's keywords win over the hero's defaults: `plain` gives `pm` unless an audience is named, `text` gives no report, and `deep` triggers the step 7 opus approval instead of the hero's model.
+7. Everything else (preflight, onboarding, context, report, index) is unchanged. The `Treated as:` line gains the hero's name: `Treated as: <type> question, for <audience> (<name>).`
 
 ## Safety contract (read first)
 
 - The **agent** is read-only by construction: its tool list is `Read, Grep, Glob`. It cannot write or run commands.
 - **You (this skill)** may write only to: `docs/flows/**` and `.claude/avengers-hints.md`. Never write, edit or delete any other path, and never run a command that modifies the repository (no formatters, no installs, no git writes). If something seems to require touching source, stop and tell the user.
 - Commands you may run are limited to: `node "<scripts dir>/check-onboarding.mjs" ...`, `node "<scripts dir>/detect-route.mjs" ...`, `node "<scripts dir>/build-report.mjs" ...`, `node "<scripts dir>/build-index.mjs" ...`, `node "<scripts dir>/migrate-reports.mjs" ...`, `graphify query|path|explain ...` (only if `graphify-out/graph.json` exists), `git log -1 --format=%cI`, `git rev-parse`. Nothing else.
-- `<ask dir>` is the "Base directory for this skill" path shown when this skill loaded. `<scripts dir>` is the sibling folder `<ask dir>/../explain`, where the scripts live.
+- `<ask dir>` is the "Base directory for this skill" path shown when this skill loaded. `<plugin dir>` is `<ask dir>/../..`. `<scripts dir>` is `<plugin dir>/engine`, where the scripts live.
 
 ## Steps
 
@@ -29,7 +41,7 @@ Strip leading words `plain`, `text`, `report`, `deep` (any order). `report: true
 
 ### 2. Preflight (every run, fast, mechanical)
 Run from the repo root: `node "<scripts dir>/check-onboarding.mjs" preflight`.
-- If `ok` is false: **stop.** Show each failure with its fix. Do not call the agent. Common ones: a project-level `.claude/agents/*explainer*` or `*avengers*` copy that could shadow the plugin agent (delete it); a missing or unsafe lens/audience file (the failure names the file).
+- If `ok` is false: **stop.** Show each failure with its fix. Do not call the agent. Common ones: a project-level `.claude/agents/*explainer*` or `*avengers*` copy that could shadow the plugin agent (delete it); a missing, invalid or unsafe hero or audience file (the failure names the file).
 - If `node` itself is missing: report text-only mode is still possible, but preflight cannot run; ask the user whether to continue without checks. Do not silently skip.
 - Show warnings once in a single short line each (gitignore, no README, no graph, not a git repo). Do not stop for warnings.
 - Remember `info` (graphDate, lastCommit, graphStale, hasProfile, hasOnboardingRecord, hasHints) for the context block.
@@ -60,8 +72,8 @@ Audience:
 
 Tell the user, in one line before the answer: `Treated as: <type> question, for <audience>.` Add `(couldn't tell, using workflow)` when `unclear` is true, and `also touches <alsoMatches>` when it is not null, so they can correct it.
 
-### 5. Load the lens and the audience
-Read `<ask dir>/lenses/<type>.md` and `<ask dir>/audiences/<audience>.md`. If either file is missing, stop and name the exact path. Never continue with a blank prompt: that would silently drop the format rules.
+### 5. Load the hero prompt and the audience
+Read the hero file in `<plugin dir>/heroes/` whose `type:` equals the detected type (architecture is `thor.md`, logic is `captainamerica.md`, workflow is `drstrange.md`, support is `blackwidow.md`, impact is `hulk.md`) and `<plugin dir>/audiences/<audience>.md`. Use the hero file text after its closing `---` line as the lens. If either file is missing, stop and name the exact path. Never continue with a blank prompt: that would silently drop the format rules.
 
 ### 6. Build the context block for the agent
 You prepare facts the agent cannot fetch itself:
@@ -70,7 +82,7 @@ You prepare facts the agent cannot fetch itself:
 - Include the repo profile text and the hints text (`.claude/avengers-hints.md`, else `.claude/explainer-hints.md`, if present).
 
 ### 7. Ask the agent (one run)
-Spawn the `repo-avengers` agent with: `task: explain`, `type`, `alsoMatches` (or none), `audience`, `report`, the question verbatim, the context block, then the lens file text under a line `LENS:` and the audience file text under a line `AUDIENCE:`. If `deep: true`, first ask the user to approve opus (it is slower and costs more): one question with three choices, `Use opus`, `Use the default model instead`, `Cancel`. Do not spawn the agent until they answer. On `Use opus`, pass `model: "opus"` on the Agent call for this one run. On `Use the default model instead`, pass no model and say so in one line. On `Cancel`, stop. If `deep` is not set, pass no model and do not ask. Remind it in the prompt that it is read-only and must not quote secrets. Do not run the agent a second time to rewrite the answer for another audience.
+Spawn the `repo-avengers` agent with: `task: explain`, `type`, `alsoMatches` (or none), `audience`, `report`, the question verbatim, the context block, then the hero file text after its frontmatter under a line `LENS:` and the audience file text under a line `AUDIENCE:`. If `deep: true`, first ask the user to approve opus (it is slower and costs more): one question with three choices, `Use opus`, `Use the default model instead`, `Cancel`. Do not spawn the agent until they answer. On `Use opus`, pass `model: "opus"` on the Agent call for this one run. On `Use the default model instead`, pass no model and say so in one line. On `Cancel`, stop. If `deep` is not set, pass no model (or the hero's model in hero mode) and do not ask. Remind it in the prompt that it is read-only and must not quote secrets. Do not run the agent a second time to rewrite the answer for another audience.
 
 ### 8. Relay
 Relay the prose answer. Keep citations, "Things worth flagging" and the confidence section. If `graphStale` is true, say so and suggest `/graphify <src> --update`.

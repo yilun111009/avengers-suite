@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const read = (p) => readFileSync(fileURLToPath(new URL(`../${p}`, import.meta.url)), 'utf8');
@@ -9,7 +9,7 @@ const explain = read('skills/explain/SKILL.md');
 
 test('ask skill is named ask and points at the router, lenses, audiences and agent', () => {
   assert.match(ask, /^---\nname: ask\n/);
-  for (const needle of ['detect-route.mjs', 'lenses/', 'audiences/', 'repo-avengers', 'avengers-hints.md', 'explainer-hints.md', 'Treated as:']) {
+  for (const needle of ['detect-route.mjs', 'heroes/', 'audiences/', 'repo-avengers', 'avengers-hints.md', 'explainer-hints.md', 'Treated as:']) {
     assert.ok(ask.includes(needle), `ask SKILL.md does not mention ${needle}`);
   }
 });
@@ -41,4 +41,44 @@ test('ask skill supports deep, which runs the agent on opus', () => {
 test('ask skill asks the user to approve opus before a deep run', () => {
   assert.match(ask, /ask the user to approve opus/);
   assert.match(ask, /Do not spawn the agent until they answer/);
+});
+
+const heroNames = readdirSync(fileURLToPath(new URL('../heroes/', import.meta.url))).filter((f) => f.endsWith('.md')).map((f) => f.slice(0, -3));
+
+test('every hero has a thin skill that calls ask in hero mode', () => {
+  assert.ok(heroNames.length >= 5);
+  for (const n of heroNames) {
+    const s = read(`skills/${n}/SKILL.md`).replace(/\r\n/g, '\n');
+    assert.match(s, new RegExp(`^---\nname: ${n}\n`), `${n} skill name`);
+    assert.ok(s.includes(`hero: ${n}`), `${n} skill must pass hero: ${n}`);
+    assert.ok(s.includes(`Trigger: /${n}`), `${n} skill description must end with its trigger`);
+    assert.ok(s.split('\n').length < 16, `${n} skill should stay thin`);
+  }
+});
+
+test('ask skill documents hero mode, and a named audience still wins', () => {
+  assert.match(ask, /## Hero mode/);
+  assert.match(ask, /`hero: <name>`/);
+  assert.match(ask, /named audience in the question/);
+  assert.ok(ask.includes('heroes/<name>.md'));
+});
+
+test('hero mode strips the hero marker first and lets the user keywords win', () => {
+  const hero = ask.replace(/\r\n/g, '\n').split('## Hero mode')[1].split('## Safety contract')[0];
+  assert.match(hero, /arguments start with `hero: <name>`/);
+  assert.match(hero, /Remove that token/);
+  assert.match(hero, /user's keywords win/);
+  assert.match(hero, /`plain` gives `pm`/);
+  assert.match(hero, /`text` gives no report/);
+  assert.match(hero, /`deep` triggers the step 7 opus approval/);
+});
+
+test('hero skills pass the hero marker followed by the user arguments', () => {
+  for (const n of heroNames) {
+    assert.ok(read(`skills/${n}/SKILL.md`).includes(`\`hero: ${n}\` followed by`), `${n} skill must say hero marker followed by the arguments`);
+  }
+});
+
+test('step 7 allows the hero model when deep is not set', () => {
+  assert.match(ask, /pass no model \(or the hero's model in hero mode\)/);
 });

@@ -1,3 +1,13 @@
+---
+name: hulk
+command: /hulk
+type: impact
+audience: dev
+model: sonnet
+report: true
+approval: none
+intro: "Hulk smash. Checking what breaks..."
+---
 # Lens: impact
 
 The question is about what is affected if something changes or is removed.

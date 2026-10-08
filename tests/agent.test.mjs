@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const agentFile = join(root, 'agents', 'repo-avengers.md');
-const script = join(root, 'skills', 'explain', 'check-onboarding.mjs');
+const script = join(root, 'engine', 'check-onboarding.mjs');
 
 test('the old agent file is gone and the new one exists', () => {
   assert.equal(existsSync(join(root, 'agents', 'rg-repo-explainer.md')), false);
@@ -34,12 +34,12 @@ test('the real plugin passes preflight end to end', () => {
   writeFileSync(join(repo, 'app.js'), 'export {}\n');
   const env = { ...process.env };
   delete env.AVENGERS_AGENT_PATH;
-  delete env.AVENGERS_ASK_DIR;
+  delete env.AVENGERS_PLUGIN_DIR;
   const r = JSON.parse(spawnSync(process.execPath, [script, 'preflight'], { cwd: repo, env, encoding: 'utf8' }).stdout);
   assert.equal(r.ok, true, JSON.stringify(r.failures));
 });
 
 test('dev answers keep the "Things worth flagging" section', () => {
   assert.ok(readFileSync(agentFile, 'utf8').includes('Things worth flagging'));
-  assert.ok(readFileSync(join(root, 'skills', 'ask', 'audiences', 'dev.md'), 'utf8').includes('Things worth flagging'));
+  assert.ok(readFileSync(join(root, 'audiences', 'dev.md'), 'utf8').includes('Things worth flagging'));
 });

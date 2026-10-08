@@ -1,3 +1,13 @@
+---
+name: blackwidow
+command: /blackwidow
+type: support
+audience: support
+model: sonnet
+report: true
+approval: none
+intro: "Black Widow is tracing the trail from symptom to cause..."
+---
 # Lens: support
 
 The question is about a symptom someone saw (an error, a wrong result, a stuck state) and what to do about it.
