@@ -1,0 +1,20 @@
+{
+  "name": "avengers-suite",
+  "owner": { "name": "yilun.lai" },
+  "plugins": [
+    {
+      "name": "repo-avengers",
+      "source": "./repo-avengers",
+      "description": "Ask anything about the current repo (architecture, logic, workflow, support, impact), with citations and an HTML report written for dev, QA, PM or support.",
+      "category": "development",
+      "tags": ["codebase", "ask", "architecture", "report"]
+    },
+    {
+      "name": "mission-control",
+      "source": "./mission-control",
+      "description": "Turn saved repo research into an implementation plan (HTML and Markdown) on a model you choose.",
+      "category": "development",
+      "tags": ["plan", "report"]
+    }
+  ]
+}
