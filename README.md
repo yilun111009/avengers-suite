@@ -121,7 +121,7 @@ Already have a hero report and want it without the hero look (to forward it, say
 /plainreport refund-flow/heroes/hulk   # one hero's report from an /assemble run
 ```
 
-It does not change the wording; for an answer written for someone else use `/ask for <audience> ...`. The `/assemble` team page is not supported. Under the hood it runs `build-report.mjs ... --no-theme`.
+On an `/assemble` folder it rebuilds the whole run: every finished hero's page, then the team page as `report.plain.html`. The plain team page has no Fury band and no emblems or coloured edges. The cards still show each hero's name and summary, and link to that hero's `report.plain.html`, so nothing in the plain set links back to a themed page. It does not change the wording; for an answer written for someone else use `/ask for <audience> ...`. Under the hood it runs `build-report.mjs ... --no-theme` and `build-assemble.mjs ... --no-theme`.
 
 ### Assemble (Fury)
 

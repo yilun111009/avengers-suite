@@ -241,3 +241,46 @@ test('the card edge uses the light accent in light mode and the dark accent in d
   assert.match(r.html, /:root\[data-theme=dark\] \.item\[style\*="--hero"\]\{border-left-color:var\(--hero-d\)\}/);
   assert.doesNotMatch(card, /border-left:4px solid #2e7d32/);
 });
+
+function buildPlain(obj, env = {}) {
+  const dir = mkdtempSync(join(tmpdir(), 'avengers-assemble-p-'));
+  const inPath = join(dir, 'report.json');
+  const outPath = join(dir, 'report.plain.html');
+  const text = JSON.stringify(obj);
+  writeFileSync(inPath, text);
+  const r = spawnSync(process.execPath, [script, inPath, outPath, '--no-theme'], { encoding: 'utf8', env: { ...process.env, ...env } });
+  return { status: r.status, stderr: r.stderr, html: existsSync(outPath) ? readFileSync(outPath, 'utf8') : '', json: readFileSync(inPath, 'utf8'), text };
+}
+
+test('--no-theme gives the pre-theme team page, except that cards link to each hero\'s plain report', () => {
+  const r = buildPlain(JSON.parse(readFileSync(asmJson, 'utf8')));
+  assert.equal(r.status, 0, r.stderr);
+  assert.doesNotMatch(r.html, /class="band"|class="emblem"|--hero|The team has assembled\./);
+  assert.equal(r.html, asmHtml.replace(/report\.html"/g, 'report.plain.html"').replace(/(href="heroes\/[^"]*)report\.plain\.html"/g, '$1report.plain.html"'));
+  assert.equal(r.json, r.text);
+});
+
+test('--no-theme keeps the hero names and summaries on the cards and links only to plain hero pages', () => {
+  const r = buildPlain({ ...BASE });
+  assert.match(r.html, /<b>hulk<\/b>/);
+  assert.match(r.html, /hulk summary/);
+  assert.match(r.html, /href="heroes\/hulk\/report\.plain\.html"/);
+  assert.doesNotMatch(r.html, /href="heroes\/[^"]*\/report\.html"/);
+});
+
+test('--no-theme still refuses a bad link and a secret', () => {
+  const bad = buildPlain({ ...BASE, results: [ok('hulk', { reportPath: '../../etc/report.html' })] });
+  assert.doesNotMatch(bad.html, /href=/);
+  const dir = mkdtempSync(join(tmpdir(), 'avengers-assemble-s-'));
+  const inPath = join(dir, 'report.json');
+  writeFileSync(inPath, JSON.stringify({ ...BASE, summary: 'key AKIAABCDEFGHIJKLMNOP' }));
+  const r = spawnSync(process.execPath, [script, inPath, join(dir, 'out.html'), '--no-theme'], { encoding: 'utf8' });
+  assert.equal(r.status, 3);
+  assert.equal(existsSync(join(dir, 'out.html')), false);
+});
+
+test('without --no-theme the team page is still themed and links to the themed hero pages', () => {
+  const r = buildThemed(JSON.parse(readFileSync(asmJson, 'utf8')));
+  assert.match(r.html, /class="band"/);
+  assert.match(r.html, /href="heroes\/hulk\/report\.html"/);
+});

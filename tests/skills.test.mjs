@@ -156,12 +156,15 @@ test('the hero look is only for the user: a named audience (even dev) leaves her
   assert.match(step9, /omits `hero`, so it carries no emblem, band or hero tagline/);
 });
 
-test('plainreport rebuilds with --no-theme into report.plain.html, keeps the originals, and skips the team page', () => {
+test('plainreport rebuilds with --no-theme into report.plain.html, keeps the originals, and rebuilds a team folder too', () => {
   const s = read('skills/plainreport/SKILL.md').replace(/\r\n/g, '\n');
   assert.match(s, /^---\nname: plainreport\n/);
   assert.match(s, /build-report\.mjs" docs\/flows\/<slug>\/report\.json docs\/flows\/<slug>\/report\.plain\.html --no-theme/);
   assert.match(s, /Keep the original `report\.json` and `report\.html`/);
   assert.match(s, /`type` is `assemble`/);
+  assert.match(s, /build-assemble\.mjs" docs\/flows\/<slug>\/report\.json docs\/flows\/<slug>\/report\.plain\.html --no-theme/);
+  assert.match(s, /has no link that leads back to a themed one/);
+  assert.doesNotMatch(s, /team page is not supported/);
   assert.match(s, /Never accept a path with `\.\.`/);
   assert.match(s, /No agent runs|does not rewrite the answer/);
 });

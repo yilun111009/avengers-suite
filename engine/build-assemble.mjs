@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Usage: node build-assemble.mjs <combined.json> <out.html>
+// Usage: node build-assemble.mjs <combined.json> <out.html> [--no-theme]
 // Renders the combined /assemble page: Fury's summary, one card per hero with a link to that hero's own report,
 // the merged sources and confidence, and any disagreement the heroes themselves reported.
 // Refuses (exit 3, nothing written) if any field looks like a credential. Links are only written when they stay inside heroes/.
@@ -37,19 +37,22 @@ const CARD_EDGE_CSS = '<style>' +
   ':root[data-theme=dark] .item[style*="--hero"]{border-left-color:var(--hero-d)}' +
   '</style>';
 
-export function render(d) {
+// plain: no Fury band, no card emblems or edges, and cards link to each hero's report.plain.html
+export function render(d, { plain = false } = {}) {
   const results = onlyResults(d.results);
   const pluginDir = process.env.AVENGERS_PLUGIN_DIR ?? fileURLToPath(new URL('../', import.meta.url));
-  const fury = themeFor('fury', pluginDir);
+  const fury = plain ? null : themeFor('fury', pluginDir);
   const done = results.filter((r) => r.status === 'ok');
   const card = (r) => {
     if (r.status !== 'ok') {
       return `<li class="item bad"><b>${esc(r.hero)}</b> <span class="tag">${esc(r.model)}</span> <span class="age bad">failed</span>
 <div class="q">${esc(r.task)}</div><p>${esc(r.error || 'no result')}</p><p class="muted">Re-run only this hero with <code>/assemble rerun ${esc(r.hero)}</code>. Nothing is re-run automatically.</p></li>`;
     }
-    const link = safeLink(r.reportPath);
+    // the path is validated first; the plain page then points at the plain copy of the same hero folder
+    const safe = safeLink(r.reportPath);
+    const link = safe && plain ? safe.replace(/report\.html$/, 'report.plain.html') : safe;
     // a repeated hero is named hulk-2, hulk-3 ...; its look is the base hero's
-    const t = themeFor(typeof r.hero === 'string' ? r.hero.replace(/-\d+$/, '') : r.hero, pluginDir);
+    const t = plain ? null : themeFor(typeof r.hero === 'string' ? r.hero.replace(/-\d+$/, '') : r.hero, pluginDir);
     return `<li class="item"${t ? ` style="--hero:${t.accent};--hero-d:${t.accentDark}"` : ''}>${t ? t.emblemSvg + ' ' : ''}<b>${esc(r.hero)}</b> <span class="tag">${esc(r.model)}</span> <span class="tag">${esc(r.type)}</span>
 <div class="q">${esc(r.task)}</div><p>${esc(r.summary)}</p>${link ? `<p><a href="${esc(link)}">Open ${esc(r.hero)}'s full report</a></p>` : ''}</li>`;
   };
@@ -88,8 +91,8 @@ ${sources.length ? `<h2>Sources</h2><ul>${sources.map((s) => `<li><code>${esc(s)
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const [, , inPath, outPath] = process.argv;
-  if (!inPath || !outPath) { console.error('usage: node build-assemble.mjs <combined.json> <out.html>'); process.exit(2); }
+  const [, , inPath, outPath, ...flags] = process.argv;
+  if (!inPath || !outPath) { console.error('usage: node build-assemble.mjs <combined.json> <out.html> [--no-theme]'); process.exit(2); }
   let d;
   try { d = JSON.parse(readFileSync(inPath, 'utf8')); } catch (e) { console.error(`${inPath} is not valid JSON or cannot be read: ${e.code ?? 'parse error'}`); process.exit(2); }
   const hits = scanSecrets(d, '');
@@ -99,6 +102,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(3);
   }
   mkdirSync(dirname(outPath), { recursive: true });
-  writeFileSync(outPath, render(d));
+  writeFileSync(outPath, render(d, { plain: flags.includes('--no-theme') }));
   console.log(`wrote ${outPath}`);
 }

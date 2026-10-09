@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.4 - 2026-10-09
+
+### Added
+- `build-assemble.mjs --no-theme`: the `/assemble` team page without Fury's band, tagline, card emblems and coloured edges. The cards keep each hero's name and summary and link to that hero's `report.plain.html`. Without the flag the page is exactly as before.
+
+### Changed
+- `/plainreport <slug>` now works on an `/assemble` folder: it rebuilds every finished hero's page and then the team page, all as `report.plain.html`, so the plain set never links back to a themed page. It used to refuse the team page.
+
 ## 1.5.3 - 2026-10-09
 
 ### Added
