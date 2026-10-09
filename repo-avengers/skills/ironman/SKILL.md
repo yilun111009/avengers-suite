@@ -1,6 +1,6 @@
 ---
 name: ironman
-description: Iron Man runs the thorough, expensive version of /ask on the most capable model, after you approve it, and ends with a systems check of what could not be seen. Trigger: /ironman
+description: "Iron Man runs the thorough, expensive version of /ask on the most capable model, after you approve it, and ends with a systems check of what could not be seen. Trigger: /ironman"
 argument-hint: "<hard question> (runs on opus, asks you first)"
 ---
 

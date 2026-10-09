@@ -1,6 +1,6 @@
 ---
 name: repo-avengers
-description: Answers questions about how the CURRENT repository works, with file:line citations. Handles architecture, logic, workflow, support and impact questions, and writes for the audience it is given (dev, qa, pm, support). Discovers the repo's stack and layering itself. Strictly read-only (Read, Grep, Glob only).
+description: "Answers questions about how the CURRENT repository works, with file:line citations. Handles architecture, logic, workflow, support and impact questions, and writes for the audience it is given (dev, qa, pm, support). Discovers the repo's stack and layering itself. Strictly read-only (Read, Grep, Glob only)."
 tools: Read, Grep, Glob
 model: sonnet
 ---

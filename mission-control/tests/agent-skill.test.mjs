@@ -83,3 +83,16 @@ test('the skill asks Brief, Detailed or Both on every run and passes it to build
 test('the flightplan skill shows its usage after the command name (argument-hint)', () => {
   assert.match(skill.split('\n---\n')[0], /\nargument-hint: "<report-folder>\.\.\. \[on opus\|sonnet\|haiku\] <goal>"$/m);
 });
+
+// Claude Code parses frontmatter as YAML and drops ALL of it on a parse error (no description, no hint, no tools limit).
+// A plain value with ": " (e.g. "Read-only: it ...") is such an error, so a value is either "double-quoted JSON" or plain and safe.
+test('the skill and the agent have frontmatter that Claude Code can parse as YAML', () => {
+  for (const [name, text] of [['skill', skill], ['agent', agent]]) {
+    for (const line of frontmatter(text).split('\n')) {
+      const m = /^([a-z][a-z-]*): (.+)$/.exec(line);
+      assert.ok(m, `${name}: not a "key: value" line: ${line}`);
+      if (m[2].startsWith('"')) assert.doesNotThrow(() => JSON.parse(m[2]), `${name} ${m[1]}`);
+      else assert.ok(!/: | #|^[\[\]{}>|*&!%@`'"]/.test(m[2]), `${name} ${m[1]}: plain value that YAML misreads; quote it`);
+    }
+  }
+});

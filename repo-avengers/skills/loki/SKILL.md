@@ -1,6 +1,6 @@
 ---
 name: loki
-description: Loki looks for hidden risks in the current repo: missing checks, ignored errors, swallowed failures and surprising behaviour. Trigger: /loki
+description: "Loki looks for hidden risks in the current repo: missing checks, ignored errors, swallowed failures and surprising behaviour. Trigger: /loki"
 argument-hint: "<area to check for hidden risks, e.g. the payout job>"
 ---
 

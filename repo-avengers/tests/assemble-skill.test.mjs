@@ -9,7 +9,7 @@ const ask = read('skills/ask/SKILL.md');
 
 test('the assemble skill is named assemble and ends its description with the trigger', () => {
   assert.match(s, /^---\nname: assemble\n/);
-  assert.match(s, /\ndescription: [^\n]* Trigger: \/assemble\n(argument-hint: [^\n]+\n)?---/);
+  assert.match(s, /\ndescription: [^\n]* Trigger: \/assemble"?\n(argument-hint: [^\n]+\n)?---/);
 });
 
 test('it runs the same preflight and onboarding as ask, and stops on a preflight failure', () => {

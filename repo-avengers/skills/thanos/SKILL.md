@@ -1,6 +1,6 @@
 ---
 name: thanos
-description: Thanos lists code in the current repo that looks unused, as candidates for removal with how each was checked. It never deletes anything. Trigger: /thanos
+description: "Thanos lists code in the current repo that looks unused, as candidates for removal with how each was checked. It never deletes anything. Trigger: /thanos"
 argument-hint: "<area to scan for unused code, e.g. the billing module>"
 ---
 

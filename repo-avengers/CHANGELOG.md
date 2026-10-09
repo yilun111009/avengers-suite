@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.6.2 - 2026-10-09 16:30
+
+### Fixed
+- The command menu showed only the bare name (`(repo-avengers) hawkeye`) with no description and no usage hint. Every skill's `description` was unquoted and contained `: ` (for example `Trigger: /hawkeye`), which is invalid YAML, so Claude Code dropped the whole frontmatter. The descriptions are now quoted, so the description and the 1.6.1 hint both show.
+
+### Added
+- A test that every skill and agent has frontmatter Claude Code can parse: each value is double-quoted, or plain with no `: ` or ` #`.
+
+### Notes
+- The old tests matched the frontmatter as text, so they passed although Claude Code could not read it.
+
 ## 1.6.1 - 2026-10-09 14:45
 
 ### Added

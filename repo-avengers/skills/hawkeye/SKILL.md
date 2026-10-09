@@ -1,6 +1,6 @@
 ---
 name: hawkeye
-description: Hawkeye answers a quick lookup in the current repo in one to three lines with path:line, on the cheapest model, with no report. Trigger: /hawkeye
+description: "Hawkeye answers a quick lookup in the current repo in one to three lines with path:line, on the cheapest model, with no report. Trigger: /hawkeye"
 argument-hint: "<quick lookup, e.g. where is the retry logic> (no report)"
 ---
 
