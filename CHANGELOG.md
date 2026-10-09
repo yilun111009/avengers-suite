@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 - 2026-10-09
+## 0.1.0 - 2026-10-09 11:42
 
 ### Added
 - `/flightplan <slug>... [on opus|sonnet|haiku] <goal>`: turns saved repo-avengers reports into a plan (`plan.html`, `plan.md`, `plan.json`) under `docs/plans/<name>/`.
