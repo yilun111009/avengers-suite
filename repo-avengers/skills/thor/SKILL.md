@@ -1,6 +1,7 @@
 ---
 name: thor
 description: Thor maps how the current repo is structured: layers, boundaries and how the parts connect, with file:line citations and an HTML report. Trigger: /thor
+argument-hint: "<module or area to map, e.g. the billing module>"
 ---
 
 # thor

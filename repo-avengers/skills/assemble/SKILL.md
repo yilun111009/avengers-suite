@@ -1,6 +1,7 @@
 ---
 name: assemble
 description: Assemble a team. Fury splits a goal into sub-questions, proposes up to five heroes with a model for each, shows you the plan and the relative cost, and only after you approve runs them in parallel as read-only agents. You get one merged report plus a full report per hero. Read-only. Trigger: /assemble
+argument-hint: "[for qa|pm|support] <goal>  |  rerun <hero>"
 ---
 
 # Assemble (Fury)

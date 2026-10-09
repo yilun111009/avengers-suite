@@ -1,6 +1,7 @@
 ---
 name: plainreport
 description: Rebuild a saved hero report as a plain page, with no emblem, header band or hero tagline. No agent runs and nothing is rewritten. Read-only apart from one new HTML file. Trigger: /plainreport
+argument-hint: "[report folder, or <folder>/heroes/<hero>]"
 ---
 
 # plainreport

@@ -1,6 +1,7 @@
 ---
 name: drstrange
 description: Doctor Strange follows a request through every path in the current repo, the success path and each failure branch, with citations and an HTML report. Trigger: /drstrange
+argument-hint: "<flow to follow, e.g. what happens when a payment fails>"
 ---
 
 # drstrange

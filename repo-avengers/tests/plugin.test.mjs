@@ -5,10 +5,10 @@ import { fileURLToPath } from 'node:url';
 
 const read = (p) => readFileSync(fileURLToPath(new URL(`../${p}`, import.meta.url)), 'utf8');
 
-test('plugin.json is repo-avengers 1.6.0', () => {
+test('plugin.json is repo-avengers 1.6.1', () => {
   const p = JSON.parse(read('.claude-plugin/plugin.json'));
   assert.equal(p.name, 'repo-avengers');
-  assert.equal(p.version, '1.6.0');
+  assert.equal(p.version, '1.6.1');
 });
 
 test('marketplace keeps the id rg-local and lists repo-avengers', () => {
@@ -34,10 +34,10 @@ test('the README names the new plugin and keeps the upgrade note', () => {
   assert.ok(r.includes('/plugin uninstall rg-repo-explainer@rg-local'));
 });
 
-test('the changelog has a 1.6.0 entry on top, dated with a time, and keeps every earlier version', () => {
+test('the changelog has a 1.6.1 entry on top, dated with a time, and keeps every earlier version', () => {
   const c = read('CHANGELOG.md').replace(/\r\n/g, '\n');
-  assert.match(c, /^# Changelog\n\n## 1\.6\.0 - \d{4}-\d{2}-\d{2} \d{2}:\d{2}\n/);
-  for (const v of ['1.5.6', '1.5.5', '1.5.4', '1.5.3', '1.5.2', '1.5.1', '1.5.0', '1.4.0', '1.3.0', '1.2.0', '1.1.0', '1.0.0']) assert.ok(c.includes(`\n## ${v} `), `changelog lost ${v}`);
+  assert.match(c, /^# Changelog\n\n## 1\.6\.1 - \d{4}-\d{2}-\d{2} \d{2}:\d{2}\n/);
+  for (const v of ['1.6.0', '1.5.6', '1.5.5', '1.5.4', '1.5.3', '1.5.2', '1.5.1', '1.5.0', '1.4.0', '1.3.0', '1.2.0', '1.1.0', '1.0.0']) assert.ok(c.includes(`\n## ${v} `), `changelog lost ${v}`);
 });
 
 test('the README documents report themes, the themes folder and the limits', () => {

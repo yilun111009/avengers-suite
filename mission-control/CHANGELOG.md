@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1 - 2026-10-09 14:45
+
+### Added
+- `/flightplan` shows its usage right after the command name as you type it: `<report-folder>... [on opus|sonnet|haiku] <goal>`.
+
 ## 0.3.0 - 2026-10-09 14:28
 
 ### Changed

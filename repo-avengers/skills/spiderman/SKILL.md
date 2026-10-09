@@ -1,6 +1,7 @@
 ---
 name: spiderman
 description: Spider-Man explains how the current repo works in plain language for a newcomer, with no code names, plus an HTML report. Trigger: /spiderman
+argument-hint: "<what you want explained in plain language>"
 ---
 
 # spiderman

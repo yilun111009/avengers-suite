@@ -79,3 +79,7 @@ test('the skill asks Brief, Detailed or Both on every run and passes it to build
   assert.match(skill, /--detail <chosen detail>/);
   assert.match(skill, /brief\.html/);
 });
+
+test('the flightplan skill shows its usage after the command name (argument-hint)', () => {
+  assert.match(skill.split('\n---\n')[0], /\nargument-hint: "<report-folder>\.\.\. \[on opus\|sonnet\|haiku\] <goal>"$/m);
+});
