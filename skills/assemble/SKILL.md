@@ -78,7 +78,7 @@ Spawn **all the agents in one message** so they run concurrently. Each is the `r
 
 ### 6. Collect, per hero
 For each reply, extract its last ```json block.
-- Valid: first check the JSON for secrets before you write it (a password, key, token or connection string in any field: remove it and tell the user), then stamp `generated` (today) and `commit` (`git rev-parse --short HEAD`, omit if not a git repo), set `type` and `audience` to the values you used, set `hero` to the hero's base name (`hulk` even for the second Hulk run), and write it to that run's own folder (`heroes/hulk/`, or `heroes/hulk-2/` for the second run) as `docs/flows/<slug>/heroes/<folder>/report.json`. Build its page: `node "<scripts dir>/build-report.mjs" docs/flows/<slug>/heroes/<hero>/report.json docs/flows/<slug>/heroes/<hero>/report.html`. The secret scan runs here, for every hero. If it refuses (exit code 3), redact the flagged fields in that hero's JSON and tell the user; do not publish a page that refused.
+- Valid: first check the JSON for secrets before you write it (a password, key, token or connection string in any field: remove it and tell the user), then stamp `generated` (today) and `commit` (`git rev-parse --short HEAD`, omit if not a git repo), set `type` and `audience` to the values you used, set `hero` to the hero's base name (`hulk` even for the second Hulk run) only when no audience was named in step 1 (the report is for the user; if one was named, omit `hero` so the page has no emblem, band or hero tagline), and write it to that run's own folder (`heroes/hulk/`, or `heroes/hulk-2/` for the second run) as `docs/flows/<slug>/heroes/<folder>/report.json`. Build its page: `node "<scripts dir>/build-report.mjs" docs/flows/<slug>/heroes/<hero>/report.json docs/flows/<slug>/heroes/<hero>/report.html`. The secret scan runs here, for every hero. If it refuses (exit code 3), redact the flagged fields in that hero's JSON and tell the user; do not publish a page that refused.
 - Missing or invalid JSON, or a refused build you cannot redact: that hero is `status: "failed"` with a one-line `error`. If a `report.json` with a credential-like value was already written and cannot be redacted, delete that hero's `report.json` (it is inside `docs/flows/`) and say so. The other heroes still finish. Never re-run a hero on your own: each re-run costs money. Offer it once at the end.
 
 If the same hero appears twice in the plan, its second run uses `heroes/<hero>-2/` (third: `-3/`), and that run's `reportPath` names that folder.
@@ -101,6 +101,8 @@ Write the combined JSON to `docs/flows/<slug>/report.json`:
   "generated": "<YYYY-MM-DD>", "commit": "<short sha>"
 }
 ```
+
+If an audience was named in step 1, leave `"hero": "fury"` out of this JSON too, so the team page is plain as well.
 
 Then build the page: `node "<scripts dir>/build-assemble.mjs" docs/flows/<slug>/report.json docs/flows/<slug>/report.html`. If it exits with code 3 it found a credential-like value; redact that field and run it again.
 

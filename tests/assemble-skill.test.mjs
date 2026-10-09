@@ -162,6 +162,14 @@ test('each hero JSON gets its hero name and the combined JSON gets fury', () => 
   assert.match(merge, /"hero": "fury"/);
 });
 
+test('hero (and fury) are left out of the JSON when an audience was named, so those pages are plain', () => {
+  const collect = section('### 6. Collect, per hero', '### 7.');
+  assert.match(collect, /only when no audience was named in step 1/);
+  assert.match(collect, /omit `hero` so the page has no emblem, band or hero tagline/);
+  const merge = section('### 7. Merge (Fury)', '## Re-run');
+  assert.match(merge, /leave `"hero": "fury"` out of this JSON too/);
+});
+
 test('a repeated hero is written to its own folder, not over the first run', () => {
   const collect = section('### 6. Collect, per hero', '### 7.');
   assert.match(collect, /set `hero` to the hero's base name \(`hulk` even for the second Hulk run\)/);

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.2 - 2026-10-09
+
+### Changed
+- The hero look (emblem, coloured band, tagline) now appears only on reports for you. If you name an audience (`for dev`, `for qa`, `for pm`, `for support`, `plain`, or the "Someone else" answer), the `ask` and `assemble` skills leave `hero` out of the report JSON, so the page is plain, like a report with no `hero`. "Me" and the `dev` audience are now different: `for dev` is a named audience and gets no look. Answer wording is unchanged.
+
+### Notes
+- No script changed. The builder already renders a report with no `hero` exactly as before; only the skill text that writes `hero` changed. To give a plain report a look again, add a `hero` field to its `report.json` and rebuild.
+
 ## 1.5.1 - 2026-10-08
 
 ### Added

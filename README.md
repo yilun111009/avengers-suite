@@ -143,6 +143,8 @@ tagline: "Hulk smash. Here is what breaks."
 
 A theme can only pick an emblem by name from the fixed set; it never supplies SVG, and colours must be `#rrggbb`. Preflight checks every theme, including contrast: the accent must reach 4.5:1 as text on the page background in both modes, and the title on the band must reach 4.5:1 too. A hero without a theme fails preflight; two coloured themes whose accents are within 12 degrees of hue only produce a warning.
 
+The look is for you only. When you do not name an audience (or you answer "For me"), the report gets the hero's look. When the report is for someone else (`for dev`, `for qa`, `for pm`, `for support`, `plain`, or the "Someone else" answer), the skill leaves `hero` out of the JSON, so the page has no emblem, no band and no hero tagline. `for dev` counts as someone else: "me" and the `dev` audience are different. The wording of the answer does not change, only the look.
+
 A report with no `hero`, an unknown hero or a broken theme looks byte-for-byte as it did before themes existed. A report built before 1.5.0 has no `hero` in its JSON, so it keeps its old look even when rebuilt; add a `hero` field (for example `"hero": "hulk"`) to its `report.json` and rebuild it to give it a look.
 
 ### Audience

@@ -147,6 +147,15 @@ test('ask writes the hero name into the report JSON, with ironman only for plain
   assert.match(step9, /The report builder uses it to pick the look in `themes\/`/);
 });
 
+test('the hero look is only for the user: a named audience (even dev) leaves hero out', () => {
+  const step4 = ask.split('### 4. Detect')[1].split('### 5.')[0];
+  assert.match(step4, /Remember `forMe`/);
+  assert.match(step4, /It is false when the audience was named in the question \(even `dev`\)/);
+  const step9 = ask.split('### 9. Report')[1].split('Layout:')[0];
+  assert.match(step9, /Set `hero` only when `forMe` is true/);
+  assert.match(step9, /omits `hero`, so it carries no emblem, band or hero tagline/);
+});
+
 test('the hero command wins over deep when choosing the look, and ironman is only for plain /ask deep', () => {
   const step9 = ask.split('### 9. Report')[1].split('Layout:')[0];
   assert.match(step9, /in hero mode set `hero` to the hero's name even when `deep` was typed/);
