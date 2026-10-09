@@ -1,3 +1,4 @@
+// COPY of repo-avengers/engine/secrets.mjs (1.5.6). tests/build-plan.test.mjs fails if the two drift apart.
 // The secret patterns shared by build-report.mjs and build-assemble.mjs, so the two scans cannot drift apart.
 export const SECRET_PATTERNS = [
   ['AWS access key id', /\bAKIA[0-9A-Z]{16}\b/],
