@@ -1,0 +1,13 @@
+{
+  "name": "mc-local",
+  "owner": { "name": "yilun.lai" },
+  "plugins": [
+    {
+      "name": "mission-control",
+      "source": "./",
+      "description": "Turn saved repo research into an implementation plan (HTML and Markdown) on a model you choose.",
+      "category": "development",
+      "tags": ["plan", "report"]
+    }
+  ]
+}

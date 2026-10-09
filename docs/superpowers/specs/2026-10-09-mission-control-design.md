@@ -86,3 +86,13 @@ The planner depends on these report fields: `title`, `question`, `summary`, `typ
 
 - The exact `plan.html` layout is settled in the plan stage, with a mock built from the fixture.
 - Whether `/flightplan` should accept a whole `/assemble` folder as one slug is assumed yes (it reads `heroes/*/report.json`).
+
+## Amendments (from planning)
+
+1. **The model rule is enforced by code.** `build-plan.mjs` exits 2 without `--model opus|sonnet|haiku`, and that flag, not the agent's output, sets `model` in `plan.json`. The agent file and the skill carry no model. Read-only is enforced by the agent's tool list (`Read, Grep, Glob`); the skill's write scope (`docs/plans/**`) is an instruction, checked only by a text test.
+2. `model`, `slugs`, `generated`, `commit` and `checks` in `plan.json` are set by `build-plan.mjs` from its flags, never by the agent.
+3. **`on <word>`**: only `opus`, `sonnet` or `haiku` right after the folder names counts as a model. Any other word after `on` is part of the goal, and the user is asked for a model. This replaces "a model name outside opus/sonnet/haiku gives a clear message".
+4. Leading words that are folders in `docs/flows/` are slugs; the first word that is not a folder starts the goal. Whitespace in the goal is collapsed to single spaces.
+5. The plugin has its own marketplace id `mc-local` (source `./`), separate from repo-avengers' `rg-local`.
+6. Slug logic lives in `engine/slug.mjs`; `engine/plan-slug.mjs` is its CLI. A shared `engine/cite.mjs` is the only `file:line` parser. `engine/secrets.mjs` is a copy of repo-avengers' scanner.
+7. The `/assemble` folder case reads the top-level `report.json` plus every `heroes/*/report.json`; a hero with no `report.json` (failed) is skipped.
