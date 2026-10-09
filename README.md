@@ -137,6 +137,8 @@ Rough cost: 3 agents (1 opus), about 5x a normal /ask
 
 Your choices are `Approve`, `Approve, all on sonnet`, `Change` (type an edit such as "drop Loki, Hulk on opus") and `Cancel`. A team has at most 5 heroes; an edit that would pass 5 is refused. The same hero may appear twice for two different sub-questions, and each counts. The cost line is a relative count, not a price.
 
+If you name an audience (`/assemble for dev ...`, `for qa`, `for pm`, `for support`), the team page is plain: no Fury band, no emblems, and the cards read Agent 1, Agent 2 and so on instead of hero names. Each hero's own page is plain too. A run with no audience named keeps the full look. `rerun` follows the original run. Free text in a summary can still mention a hero by name.
+
 The heroes run in parallel as the same read-only agent. You get `docs/flows/<slug>/report.html` for the team and `docs/flows/<slug>/heroes/<hero>/report.html` for each hero. If one hero fails, the others still finish and the team page marks it failed; run `/assemble rerun <hero>` to re-run only that hero. Fury never re-runs one on his own. `/hawkeye` answers in text only, so it cannot be part of a team; use it on its own. `Change` is applied by `engine/plan-team.mjs edit`, so an edit that names a hero not in the plan, or that would pass 5, is refused with the reason and the previous plan is kept.
 
 ### Report themes

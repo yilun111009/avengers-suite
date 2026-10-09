@@ -315,3 +315,28 @@ test('without --no-theme the team page is still themed and links to the themed h
   assert.match(r.html, /class="band"/);
   assert.match(r.html, /href="heroes\/hulk\/report\.html"/);
 });
+
+test('--no-theme --link-report-html is the page the skill builds for a named audience: Agent N, no look, links to report.html', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'avengers-assemble-l-'));
+  const inPath = join(dir, 'report.json');
+  const outPath = join(dir, 'report.html');
+  writeFileSync(inPath, JSON.stringify({ ...BASE, audience: 'dev' }));
+  const r = spawnSync(process.execPath, [script, inPath, outPath, '--no-theme', '--link-report-html'], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  const html = readFileSync(outPath, 'utf8');
+  assert.match(html, /<b>Agent 1<\/b>/);
+  assert.doesNotMatch(html, /class="band"|class="emblem"|--hero|<b>(hulk|loki)<\/b>/);
+  assert.match(html, /<a href="heroes\/hulk\/report\.html">Open Agent 1's full report<\/a>/);
+  assert.doesNotMatch(html, /report\.plain\.html/);
+});
+
+test('--link-report-html alone changes nothing: the themed page still links to report.html with hero names', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'avengers-assemble-l2-'));
+  const inPath = join(dir, 'report.json');
+  const outPath = join(dir, 'report.html');
+  writeFileSync(inPath, JSON.stringify(BASE));
+  spawnSync(process.execPath, [script, inPath, outPath, '--link-report-html'], { encoding: 'utf8' });
+  const html = readFileSync(outPath, 'utf8');
+  assert.match(html, /class="band"/);
+  assert.match(html, /<b>hulk<\/b>/);
+});

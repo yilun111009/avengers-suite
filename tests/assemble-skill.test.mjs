@@ -168,6 +168,17 @@ test('hero (and fury) are left out of the JSON when an audience was named, so th
   assert.match(collect, /omit `hero` so the page has no emblem, band or hero tagline/);
   const merge = section('### 7. Merge (Fury)', '## Re-run');
   assert.match(merge, /leave `"hero": "fury"` out of this JSON too/);
+  // the JSON alone changes nothing (build-assemble ignores hero), so the build command must carry the flags
+  assert.match(merge, /`build-assemble\.mjs` does not read `hero`/);
+  assert.match(merge, /add `--no-theme --link-report-html`/);
+  assert.match(merge, /even `dev`/);
+});
+
+test('a re-run of a run made for someone else rebuilds the team page plain, using the missing fury hero as the signal', () => {
+  const rerun = section('## Re-run', '## Notes');
+  assert.match(rerun, /Note whether it has `"hero": "fury"`/);
+  assert.match(rerun, /`--no-theme --link-report-html`/);
+  assert.match(rerun, /with the flags from step 2 if the run was for someone else/);
 });
 
 test('a repeated hero is written to its own folder, not over the first run', () => {

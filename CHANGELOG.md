@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.6 - 2026-10-09 10:57
+
+### Fixed
+- `/assemble for dev ...` (or any named audience) still produced a themed team page with the hero names. The 1.5.2 change only told the skill to leave `hero` out of the combined JSON, but `build-assemble.mjs` never reads `hero`, so the page was always themed. The skill now builds the team page with `--no-theme --link-report-html` when an audience was named: no Fury band, no emblems, Agent 1, Agent 2 ... instead of hero names, and cards that link to each hero's `report.html` (already plain for that run). A run with no audience named is unchanged.
+- `/assemble rerun <hero>` follows the original run: a run whose combined JSON has no `"hero": "fury"` was for someone else, so its re-run stays plain.
+
+### Added
+- `build-assemble.mjs --link-report-html` (only meaningful with `--no-theme`): link the cards to `report.html` instead of `report.plain.html`.
+
+### Notes
+- This was a miss in 1.5.2: its tests checked the skill's wording but not the page the build command produces. New tests build the page with the exact flags the skill prescribes.
+- Runs made before this fix keep their themed team page until rebuilt. To fix one: `/plainreport <slug>`.
+
 ## 1.5.5 - 2026-10-09 10:25
 
 ### Changed

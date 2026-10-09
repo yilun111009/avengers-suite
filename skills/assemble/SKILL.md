@@ -102,9 +102,9 @@ Write the combined JSON to `docs/flows/<slug>/report.json`:
 }
 ```
 
-If an audience was named in step 1, leave `"hero": "fury"` out of this JSON too, so the team page is plain as well.
+If an audience was named in step 1, leave `"hero": "fury"` out of this JSON too. That absence is how a later `rerun` knows the run was for someone else. `build-assemble.mjs` does not read `hero`, so the JSON alone changes nothing: the build command below decides the look.
 
-Then build the page: `node "<scripts dir>/build-assemble.mjs" docs/flows/<slug>/report.json docs/flows/<slug>/report.html`. If it exits with code 3 it found a credential-like value; redact that field and run it again.
+Then build the page. When no audience was named: `node "<scripts dir>/build-assemble.mjs" docs/flows/<slug>/report.json docs/flows/<slug>/report.html`. When an audience was named (even `dev`), add `--no-theme --link-report-html`: the page then has no Fury band, no emblems, and shows Agent 1, Agent 2 ... instead of hero names, and the cards link to each hero's `report.html` (those hero pages were already built plain in step 6). If it exits with code 3 it found a credential-like value; redact that field and run it again.
 
 Write `docs/flows/<slug>/answer.md`: the goal, today's date, the approved plan (the screen from step 4), then the merged prose answer. Never include secret values.
 
@@ -113,10 +113,10 @@ Refresh the index: `node "<scripts dir>/build-index.mjs" docs/flows`. Give the a
 ## Re-run
 `/assemble rerun <hero>` (for a hero that ran twice, use its folder name, such as `hulk-2`):
 1. Run preflight first, exactly as in step 2: `node "<scripts dir>/check-onboarding.mjs" preflight`. If `ok` is false, **stop** and show the failures. Do not spawn any agent.
-2. Find the most recent `docs/flows/*/report.json` whose `type` is `assemble` and whose `results` contain that hero; if there is none, say so and stop. Reuse the slug of the run you found; do not pick a new one. Read its `plan`, `results` and `audience` from that file.
+2. Find the most recent `docs/flows/*/report.json` whose `type` is `assemble` and whose `results` contain that hero; if there is none, say so and stop. Reuse the slug of the run you found; do not pick a new one. Read its `plan`, `results` and `audience` from that file. Note whether it has `"hero": "fury"`: if not, the run was for someone else, so the re-run hero's `report.json` omits `hero` and the team page is rebuilt with `--no-theme --link-report-html`, exactly as in step 7.
 3. Show that hero's one plan line and ask for approval with the same four choices (with a single hero, `Approve, all on sonnet` simply sets sonnet). On `Cancel`, stop.
 4. Re-run only that hero as in steps 5 and 6, writing to `docs/flows/<slug>/heroes/<hero>/` of the run you found and reuse its stored `audience`. This replaces only that hero's folder and its entry in `results`; no other hero's files are touched.
-5. Rewrite `summary`, `plainSummary` and `answer.md` from all the `ok` results, so the team page no longer describes the hero as failed. Then rebuild the combined page with `build-assemble.mjs`, refresh the index with `build-index.mjs`, and keep the hero marked failed if it failed again.
+5. Rewrite `summary`, `plainSummary` and `answer.md` from all the `ok` results, so the team page no longer describes the hero as failed. Then rebuild the combined page with `build-assemble.mjs` (with the flags from step 2 if the run was for someone else), refresh the index with `build-index.mjs`, and keep the hero marked failed if it failed again.
 
 ## Notes
 - A hero that appears twice in a plan gets folders `heroes/<hero>/` and `heroes/<hero>-2/`; `reportPath` names the right one.
