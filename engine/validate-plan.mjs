@@ -8,6 +8,8 @@ export function validatePlan(p) {
   const errors = [];
   if (!p || typeof p !== 'object' || Array.isArray(p)) return { ok: false, errors: ['the plan is not a JSON object'] };
   for (const f of ['title', 'goal', 'summary']) if (!str(p[f])) errors.push(`${f} must be a non-empty string`);
+  // title and goal travel through quoted heredocs in the skill: a line break could end the heredoc early
+  for (const f of ['title', 'goal']) if (str(p[f]) && /[\r\n]/.test(p[f])) errors.push(`${f} must be a single line`);
   if (!MODELS.includes(p.model)) errors.push('model must be opus, sonnet or haiku (build-plan sets it from --model; the agent does not)');
   if (!Array.isArray(p.slugs) || !p.slugs.length || !strArr(p.slugs)) errors.push('slugs must be a non-empty list of report folder names');
   if (!strArr(p.assumptions)) errors.push('assumptions must be a list of strings (an empty list is fine)');

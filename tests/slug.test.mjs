@@ -35,3 +35,14 @@ test('plan-slug CLI skips a folder that already exists', () => {
   assert.equal(r.status, 0);
   assert.match(r.stdout.trim(), /^add-refunds-\d{8}$/);
 });
+
+test('final review I3: the CLI still runs when engine/ is reached through a junction or symlink', async () => {
+  const { symlinkSync } = await import('node:fs');
+  const { spawnSync } = await import('node:child_process');
+  const { join } = await import('node:path');
+  const { ROOT } = await import('./helpers.mjs');
+  const link = join(tmpDir(), 'engine-link');
+  symlinkSync(join(ROOT, 'engine'), link, 'junction');
+  const r = spawnSync(process.execPath, [join(link, 'plan-slug.mjs'), tmpDir()], { input: 'Add refunds\n', encoding: 'utf8' });
+  assert.equal(r.stdout.trim(), 'add-refunds');
+});

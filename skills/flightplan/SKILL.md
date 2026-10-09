@@ -39,7 +39,7 @@ You (this skill) may write only to `docs/plans/**`. Never write, edit or delete 
    On `Change`, ask what to change in words, then go back to step 1 with the edited arguments. On `Cancel`, stop: nothing has been written. Do not start the planner without a chosen model.
 6. **Plan.** Spawn the `flight-director` agent (use the exact name in the agent list; it may carry a plugin prefix) and set the Agent call's `model` to the chosen model. Give it `goal:`, `reports:` (the JSON from step 2) and `citations:` (the JSON from step 3). It returns the plan as JSON only.
 7. **Save and build.**
-   1. Pick the folder name from the plan's title:
+   1. Pick the folder name from the plan's title (first collapse any line breaks in the title to single spaces):
       ```
       node "<scripts dir>/plan-slug.mjs" . <<'TITLE'
       <the plan title>
@@ -48,5 +48,5 @@ You (this skill) may write only to `docs/plans/**`. Never write, edit or delete 
    2. Write the agent's JSON, unchanged, to `docs/plans/<plan-slug>/plan.json`.
    3. Save a fresh citation check: re-run step 3 with its output redirected to `docs/plans/<plan-slug>/checks.json`.
    4. Build: `node "<scripts dir>/build-plan.mjs" docs/plans/<plan-slug>/plan.json docs/plans/<plan-slug> --model <chosen model> --slugs <slug>,<slug> --checks docs/plans/<plan-slug>/checks.json --commit "$(git rev-parse --short HEAD || echo unknown)"`
-   5. If it exits 2 because the plan is not valid, re-spawn the agent once with the error text appended; if it fails again, show the errors and stop. If it exits 3 (a possible secret), show the message, do not retry, and stop.
+   5. If it exits 2 because the plan is not valid, re-spawn the agent once with the error text appended; if it fails again, show the errors and stop. If it exits 3 (a possible secret), delete `docs/plans/<plan-slug>/plan.json` and `docs/plans/<plan-slug>/checks.json` (both are inside `docs/plans/**`) so the secret is not left on disk, show the message, do not retry, and stop.
 8. **Report.** Give the absolute paths of `plan.html` and `plan.md`, and say which model wrote the plan. Mention that `plan.md` can be given to the `superpowers:writing-plans` skill. Open the page in the browser only if the user asks.

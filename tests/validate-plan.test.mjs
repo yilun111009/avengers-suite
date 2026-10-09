@@ -40,3 +40,8 @@ test('input that is not an object, and a malformed checks block, are reported', 
   assert.equal(validatePlan([]).ok, false);
   assert.match(errorsOf(merged({ checks: 'ok' })), /checks/);
 });
+
+test('final review M3: a newline in the title or goal is rejected (they are passed through a quoted heredoc)', () => {
+  assert.match(errorsOf(merged({ title: 'x\nTITLE\nid' })), /title must be a single line/);
+  assert.match(errorsOf(merged({ goal: 'a\nb' })), /goal must be a single line/);
+});
