@@ -98,6 +98,56 @@ ${stages}
 `;
 }
 
+// The brief: for sharing and deciding. Flow, one line per step, and what the reader must accept. No files, verify, risk or citation detail.
+export function renderBriefMarkdown(p) {
+  const L = [
+    `# ${p.title} (brief)`, '',
+    `**Goal:** ${p.goal}`,
+    `**Planned by:** ${p.model} · ${p.generated ?? 'undated'}`, '',
+    p.summary, '',
+    '## Flow', '', p.stages.map((s) => s.name).join(' → '), '',
+  ];
+  p.stages.forEach((s, i) => {
+    L.push(`### ${i + 1}. ${s.name}`, '');
+    if (s.purpose) L.push(s.purpose, '');
+    s.steps.forEach((st) => L.push(`- ${st.text}`));
+    L.push('');
+  });
+  L.push('## Decisions needed / assumptions', '', ...(p.assumptions.length ? p.assumptions.map((a) => `- [ ] ${a}`) : ['- none recorded']), '');
+  return L.join('\n');
+}
+
+const BRIEF_CSS = `:root{--bg:#f6f7f9;--fg:#1b1f24;--muted:#5b6672;--card:#fff;--line:#d9dee4;--accent:#1f5fbf}
+@media (prefers-color-scheme: dark){:root{--bg:#0f1318;--fg:#e6eaee;--muted:#9aa6b2;--card:#171d24;--line:#2a333d;--accent:#6ea8fe}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}
+main{max-width:720px;margin:0 auto;padding:24px 16px 56px}
+h1{margin:.2em 0}h2{margin:1.5em 0 .4em}h3{margin:0 0 .2em}
+.kicker{margin:0;color:var(--muted);font-size:.85rem;letter-spacing:.06em;text-transform:uppercase}.muted,.meta{color:var(--muted)}.meta{font-size:.9rem}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
+.flow span{padding:4px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card)}.flow i{color:var(--muted);font-style:normal}
+.stage{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:10px 16px;margin:12px 0}
+.stage p{margin:0 0 6px}.stage ul,.todo{margin:6px 0 2px;padding-left:20px}
+@media print{body{background:#fff;color:#000}.stage{break-inside:avoid}}`;
+
+export function renderBriefHtml(p) {
+  const flow = p.stages.map((s) => `<span>${esc(s.name)}</span>`).join('<i>→</i>');
+  const stages = p.stages.map((s, i) => `<section class="stage"><h3>${i + 1}. ${esc(s.name)}</h3>${s.purpose ? `<p class="muted">${esc(s.purpose)}</p>` : ''}<ul>${s.steps.map((st) => `<li>${esc(st.text)}</li>`).join('')}</ul></section>`).join('\n');
+  const decisions = p.assumptions.length ? `<ul class="todo">${p.assumptions.map((a) => `<li>${esc(a)}</li>`).join('')}</ul>` : '<p class="muted">none recorded</p>';
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(p.title)} (brief)</title><style>${BRIEF_CSS}</style></head><body><main>
+<header><p class="kicker">Mission Control · brief</p><h1>${esc(p.title)}</h1><p><b>Goal:</b> ${esc(p.goal)}</p>
+<p class="meta">Planned by <b>${esc(p.model)}</b> · ${esc(p.generated ?? 'undated')}</p></header>
+<p>${esc(p.summary)}</p>
+<h2>Flow</h2><div class="flow">${flow}</div>
+${stages}
+<h2>Decisions needed / assumptions</h2>${decisions}
+</main></body></html>
+`;
+}
+
+const DETAILS = ['brief', 'detailed', 'both'];
+
 if (isMain(import.meta.url)) {
   const [, , inPath, outDir, ...rest] = process.argv;
   const flag = (n) => { const i = rest.indexOf(n); return i >= 0 ? rest[i + 1] : undefined; };
@@ -105,6 +155,8 @@ if (isMain(import.meta.url)) {
   if (!inPath || !outDir) fail(2, 'usage: node build-plan.mjs <plan.json> <outDir> --model opus|sonnet|haiku [--slugs a,b] [--checks checks.json] [--commit sha] [--generated YYYY-MM-DD]');
   const model = flag('--model');
   if (!MODELS.includes(model)) fail(2, `--model ${MODELS.join('|')} is required: the user chooses the model, there is no default.`);
+  const detail = flag('--detail') ?? 'detailed'; // detailed = the 0.1.0 behaviour; the skill always passes the user's choice
+  if (!DETAILS.includes(detail)) fail(2, `--detail ${DETAILS.join('|')}: "${detail}" is not one of them.`);
   let raw;
   let checks;
   try { raw = JSON.parse(readFileSync(inPath, 'utf8')); } catch { fail(2, 'plan.json is not valid JSON.'); }
@@ -121,10 +173,18 @@ if (isMain(import.meta.url)) {
   if (!v.ok) fail(2, 'The plan is not valid:', ...v.errors.map((e) => `  - ${e}`));
   const hits = scanSecrets(plan, '');
   if (hits.length) fail(3, 'REFUSING to write the plan: possible secrets found (values not shown). Remove them from the plan, then re-run.', ...hits.map((h) => `  - ${h}`));
+  // render everything first, so a render error cannot leave a half-written folder
+  const files = { json: [join(outDir, 'plan.json'), JSON.stringify(plan, null, 2)] };
+  if (detail !== 'brief') {
+    files.html = [join(outDir, 'plan.html'), renderHtml(plan)];
+    files.md = [join(outDir, 'plan.md'), renderMarkdown(plan)];
+  }
+  if (detail !== 'detailed') {
+    files.brief_html = [join(outDir, 'brief.html'), renderBriefHtml(plan)];
+    files.brief_md = [join(outDir, 'brief.md'), renderBriefMarkdown(plan)];
+  }
   mkdirSync(outDir, { recursive: true });
-  const out = { json: join(outDir, 'plan.json'), html: join(outDir, 'plan.html'), md: join(outDir, 'plan.md') };
-  writeFileSync(out.json, JSON.stringify(plan, null, 2));
-  writeFileSync(out.html, renderHtml(plan));
-  writeFileSync(out.md, renderMarkdown(plan));
+  const out = {};
+  for (const [k, [path, text]] of Object.entries(files)) { writeFileSync(path, text); out[k] = path; }
   console.log(JSON.stringify(out));
 }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0 - 2026-10-09 11:56
+
+### Added
+- A brief version of the plan (`brief.html`, `brief.md`): the flow, one line per step and the decisions to approve, with no files, verify, risk or citation detail. `/flightplan` asks Brief, Detailed or Both on every run.
+- `build-plan.mjs --detail brief|detailed|both` (default `detailed`, the 0.1.0 behaviour).
+
+### Changed
+- `build-plan.mjs` renders every file before writing any, so a render error leaves nothing half-written.
+
 ## 0.1.0 - 2026-10-09 11:42
 
 ### Added

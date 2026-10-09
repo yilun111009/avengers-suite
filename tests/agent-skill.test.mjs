@@ -73,3 +73,9 @@ test('final review I2: the agent opens only ok or moved citations and never read
   assert.match(agent, /only open cites whose status is `ok` or `moved`/);
   assert.match(agent, /never read a path outside the current repository/);
 });
+
+test('the skill asks Brief, Detailed or Both on every run and passes it to build-plan', () => {
+  for (const o of ['Brief', 'Detailed', 'Both']) assert.ok(skill.includes(`\`${o}\``), o);
+  assert.match(skill, /--detail <chosen detail>/);
+  assert.match(skill, /brief\.html/);
+});

@@ -111,3 +111,56 @@ test('secrets.mjs is the same as the repo-avengers scanner (skipped when it is n
   const strip = (s) => s.replace(/^\/\/ COPY of .*\n/, '').replace(/\r\n/g, '\n');
   assert.equal(strip(readFileSync(fileURLToPath(new URL('../engine/secrets.mjs', import.meta.url)), 'utf8')), strip(readFileSync(sibling, 'utf8')));
 });
+
+test('brief: flow, one line per step and the decisions, without the detail', async () => {
+  const { renderBriefHtml, renderBriefMarkdown } = await import('../engine/build-plan.mjs');
+  const p = merged();
+  const html = renderBriefHtml(p);
+  const md = renderBriefMarkdown(p);
+  for (const out of [html, md]) {
+    for (const s of p.stages) {
+      assert.ok(out.includes(s.name), s.name);
+      for (const st of s.steps) assert.ok(out.includes(st.text), st.text);
+    }
+    for (const a of p.assumptions) assert.ok(out.includes(a), a);
+    assert.ok(out.includes(p.summary) && out.includes('sonnet'));
+    for (const hidden of ['npm test -- order', 'src/order.ts:12', 'RefundTooLargeError', 'The Order status enum', 'src/gone.ts:9']) assert.ok(!out.includes(hidden), `brief leaks detail: ${hidden}`);
+  }
+  assert.ok(!/https?:\/\/|<script|<link|<img|src=/i.test(html));
+});
+
+test('brief: plan fields are escaped in the html', async () => {
+  const { renderBriefHtml } = await import('../engine/build-plan.mjs');
+  const p = merged({ title: '<script>alert(1)</script>' });
+  p.stages[0].steps[0].text = '"><img src=x onerror=alert(1)>';
+  const html = renderBriefHtml(p);
+  assert.ok(!html.includes('<script>alert(1)') && !html.includes('<img src=x'));
+});
+
+test('--detail brief writes brief.html and brief.md only (plus plan.json); detailed and both behave as named', () => {
+  const run = (detail) => {
+    const out = tmpDir();
+    const args = [fixture('plan-sample.json'), out, '--model', 'haiku', '--slugs', 'refund-flow'];
+    if (detail) args.push('--detail', detail);
+    const r = runCli('build-plan.mjs', args);
+    return { r, has: (f) => existsSync(join(out, f)) };
+  };
+  let x = run('brief');
+  assert.equal(x.r.status, 0, x.r.stderr);
+  assert.ok(x.has('plan.json') && x.has('brief.html') && x.has('brief.md') && !x.has('plan.html') && !x.has('plan.md'));
+  assert.ok(JSON.parse(x.r.stdout).brief_html);
+  x = run('detailed');
+  assert.ok(x.has('plan.html') && x.has('plan.md') && !x.has('brief.html'));
+  x = run('both');
+  assert.ok(x.has('plan.html') && x.has('plan.md') && x.has('brief.html') && x.has('brief.md'));
+  x = run(undefined); // omitted = detailed, the 0.1.0 behaviour
+  assert.ok(x.has('plan.html') && !x.has('brief.html'));
+});
+
+test('--detail with an unknown value exits 2 and writes nothing', () => {
+  const out = tmpDir();
+  const r = runCli('build-plan.mjs', [fixture('plan-sample.json'), out, '--model', 'haiku', '--slugs', 'x', '--detail', 'tiny']);
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /--detail/);
+  assert.ok(!existsSync(join(out, 'plan.json')));
+});

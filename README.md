@@ -23,8 +23,12 @@ Then restart the session or run `/reload-plugins`, and check `/plugin` for `miss
 
 1. It reads the reports and checks every cited `file:line` against the current code (`ok`, `moved`, `missing`, `outside`, `invalid`). No model is used yet.
 2. It shows an outline and asks: `Approve on opus`, `Approve on sonnet`, `Approve on haiku`, `Change` or `Cancel`.
-3. The `flight-director` agent plans on the model you picked.
-4. You get `docs/plans/<name>/plan.html` (stages, collapsible steps, go/no-go checks, assumptions, the citation check), `plan.md` (the same, as checkboxes you can hand to `superpowers:writing-plans`) and `plan.json` (the source of both).
+3. It asks how much detail you want: `Brief`, `Detailed` or `Both` (asked on every run, even with `on <model>`).
+4. The `flight-director` agent plans on the model you picked.
+5. You get the files for your choice in `docs/plans/<name>/`, all rendered from one `plan.json` (no extra model cost):
+   - **Brief** (`brief.html`, `brief.md`): the flow, one line per step, and the decisions/assumptions to approve. Short enough to send to someone who just needs to decide.
+   - **Detailed** (`plan.html`, `plan.md`): stages, collapsible steps with files, change, verify and risk, go/no-go checks, assumptions and the citation check. `plan.md` is checkboxes you can hand to `superpowers:writing-plans`.
+   - `plan.json` and `checks.json` are always kept.
 
 A folder name must be a folder in `docs/flows/`. The first word that is not a folder starts the goal. An `/assemble` folder works as one name: its combined report and every hero's report are read.
 
