@@ -33,17 +33,36 @@ The date comes first so `ls` sorts oldest to newest. A taken name gets `-2`, `-3
 
 ## Install
 
-From any repo in Claude Code, add this folder as a marketplace and install the plugins you want:
+### From GitHub (recommended)
+
+The repo is public, so there is nothing to download. In Claude Code, from any repo:
 
 ```
+/plugin marketplace add yilun111009/avengers-suite
+/plugin install repo-avengers@avengers-suite
+/plugin install mission-control@avengers-suite
+```
+
+Then restart the session or run `/reload-plugins`, and check `/plugin` for both plugins. Install only the ones you want: `mission-control` needs reports from `repo-avengers` to plan from.
+
+To get a newer version later:
+
+```
+/plugin marketplace update avengers-suite
+```
+
+### From a local folder (for development)
+
+Clone the repo, then point Claude Code at the folder instead of GitHub:
+
+```
+git clone https://github.com/yilun111009/avengers-suite.git
 /plugin marketplace add <path-to-avengers-suite>
 /plugin install repo-avengers@avengers-suite
 /plugin install mission-control@avengers-suite
 ```
 
-Then restart the session or run `/reload-plugins`, and check `/plugin` for both plugins.
-
-Each plugin also ships its own marketplace file, so it can be installed on its own (see each plugin's README).
+Each plugin folder also ships its own local marketplace file (`rg-local`, `mc-local`), so one plugin can be installed on its own from its folder.
 
 ## Quick start
 

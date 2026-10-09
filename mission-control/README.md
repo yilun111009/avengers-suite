@@ -4,7 +4,18 @@ A Claude Code plugin: turn research you already saved (reports in `docs/flows/<s
 
 It reads reports written by the separate `repo-avengers` plugin. It never changes your code: the planner is read-only and the only folder written is `docs/plans/`.
 
-## Install (local folder)
+## Install
+
+From GitHub, in Claude Code, from any repo:
+
+```
+/plugin marketplace add yilun111009/avengers-suite
+/plugin install mission-control@avengers-suite
+```
+
+You will usually want `repo-avengers@avengers-suite` too, since it writes the reports this plugin plans from. Update later with `/plugin marketplace update avengers-suite`.
+
+From a local folder instead (for development):
 
 ```
 /plugin marketplace add <path-to-this-folder>

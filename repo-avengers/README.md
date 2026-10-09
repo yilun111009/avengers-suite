@@ -4,9 +4,18 @@ A Claude Code plugin: ask a question about the repo you are in and get an answer
 
 Formerly `rg-repo-explainer` (0.x). See [CHANGELOG.md](CHANGELOG.md).
 
-## Install (local folder)
+## Install
 
-Clone or copy this folder anywhere on your machine, then in Claude Code, from any repo:
+From GitHub, in Claude Code, from any repo:
+
+```
+/plugin marketplace add yilun111009/avengers-suite
+/plugin install repo-avengers@avengers-suite
+```
+
+Update later with `/plugin marketplace update avengers-suite`. See the [suite README](../README.md) for both plugins.
+
+From a local folder instead (for development): clone or copy this folder, then:
 
 ```
 /plugin marketplace add <path-to-this-folder>
