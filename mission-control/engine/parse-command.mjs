@@ -1,18 +1,21 @@
 #!/usr/bin/env node
 // Usage: node parse-command.mjs <repoRoot>   (the /flightplan arguments on stdin)
-// Prints { slugs, model, goal, errors }. Leading words that are folders in docs/flows/ are slugs; the first other word starts the goal.
-import { statSync } from 'node:fs';
+// Prints { slugs, model, goal, errors }. Leading words that name folders in docs/flows/ are slugs; the first other word starts the goal.
+// A word is a folder's exact name or a short name (`refund-flow` for 2026-10-09-workflow-refund-flow, see naming.mjs);
+// slugs are always the full folder names.
+import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { FLOWS_ROOT, MODELS, SLUG_RE } from './constants.mjs';
 import { isMain, readStdin } from './cli.mjs';
+import { resolveName } from './naming.mjs';
 
-export function parseCommand(text, isFolder) {
+// resolve(word) returns the folder name a word stands for, or null when it names no folder
+export function parseCommand(text, resolve) {
   const words = String(text ?? '').trim().split(/\s+/).filter(Boolean);
   const slugs = [];
   let i = 0;
-  while (i < words.length && SLUG_RE.test(words[i]) && isFolder(words[i])) {
-    if (!slugs.includes(words[i])) slugs.push(words[i]);
-    i++;
+  for (let name; i < words.length && SLUG_RE.test(words[i]) && (name = resolve(words[i])); i++) {
+    if (!slugs.includes(name)) slugs.push(name);
   }
   // only a real model name counts; "on <anything else>" stays in the goal and the user is asked for a model
   let model = null;
@@ -34,6 +37,7 @@ export function parseCommand(text, isFolder) {
 if (isMain(import.meta.url)) {
   const [, , root] = process.argv;
   if (!root) { console.error('usage: node parse-command.mjs <repoRoot>  (arguments on stdin)'); process.exit(2); }
-  const isFolder = (w) => { try { return statSync(join(root, FLOWS_ROOT, w)).isDirectory(); } catch { return false; } };
-  console.log(JSON.stringify(parseCommand(readStdin(), isFolder)));
+  let names = [];
+  try { names = readdirSync(join(root, FLOWS_ROOT), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name); } catch { /* no docs/flows yet */ }
+  console.log(JSON.stringify(parseCommand(readStdin(), (w) => resolveName(w, names))));
 }

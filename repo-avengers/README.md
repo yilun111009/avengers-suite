@@ -180,11 +180,20 @@ Each question gets its own folder:
 docs/flows/
   _repo-profile.md
   _onboarding.md
-  checkout-flow/   report.html, report.json, answer.md
-  refund-flow/     report.html, report.json, answer.md
+  2026-10-09-workflow-checkout-flow/      report.html, report.json, answer.md
+  2026-10-09-impact-order-status-enum/    report.html, report.json, answer.md
+  2026-10-09-assemble-refund-flow/        report.html, report.json, answer.md, heroes/
 ```
 
-A repeated slug becomes `<slug>-<YYYYMMDD>`. Open `docs/flows/index.html` for a searchable list of all reports, with a filter by question type. Add `docs/flows/` to `.gitignore` if you do not want them committed.
+Every folder is named `<YYYY-MM-DD>-<type>-<topic>` by `engine/name-folder.mjs`, so the names sort by date and are easy to search:
+
+```
+ls docs/flows/2026-10-*          # one month
+ls -d docs/flows/*-impact-*      # every impact report
+ls -d docs/flows/*refund*        # one topic
+```
+
+The type is the question type (`architecture`, `logic`, `workflow`, `support`, `impact`, `deadcode`, `deepdive`, `risk`) or `assemble`. The topic comes from the report title, at most 40 characters. A name that is taken gets `-2`, `-3`. Folders made before 1.6.0 keep their old names. Open `docs/flows/index.html` for a searchable list of all reports, with a filter by question type. Add `docs/flows/` to `.gitignore` if you do not want them committed.
 
 ## Read-only guarantee
 

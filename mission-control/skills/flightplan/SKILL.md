@@ -20,7 +20,7 @@ You (this skill) may write only to `docs/plans/**`. Never write, edit or delete 
    <the arguments exactly as typed>
    ARGS
    ```
-   It prints `{slugs, model, goal, errors}`. If `errors` is not empty, print them and stop.
+   It prints `{slugs, model, goal, errors}`. If `errors` is not empty, print them and stop. A folder can be typed in full or by its topic alone (`refund-flow` for `2026-10-09-workflow-refund-flow`, the newest such folder); `slugs` always holds the full folder names, so use those from here on.
 2. **Read.** `node "<scripts dir>/read-reports.mjs" . <slug> [<slug> ...]` prints `{reports, errors, cites}`. If `errors` is not empty, print each and stop. Keep `reports` and `cites` for the next steps.
 3. **Check citations.** Pass `cites` as a JSON array:
    ```
@@ -50,6 +50,7 @@ You (this skill) may write only to `docs/plans/**`. Never write, edit or delete 
       <the plan title>
       TITLE
       ```
+      It prints `<plan-slug>`, shaped `<YYYY-MM-DD>-<topic>`, with `-2`, `-3` added when taken. Use it exactly as printed.
    2. Write the agent's JSON, unchanged, to `docs/plans/<plan-slug>/plan.json`.
    3. Save a fresh citation check: re-run step 3 with its output redirected to `docs/plans/<plan-slug>/checks.json`.
    4. Build: `node "<scripts dir>/build-plan.mjs" docs/plans/<plan-slug>/plan.json docs/plans/<plan-slug> --model <chosen model> --detail <chosen detail> --slugs <slug>,<slug> --checks docs/plans/<plan-slug>/checks.json --commit "$(git rev-parse --short HEAD || echo unknown)"`

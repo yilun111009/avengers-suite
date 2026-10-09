@@ -5,7 +5,7 @@ export const MODEL_NOTE = {
   sonnet: 'balanced',
   haiku: 'cheapest, best for small plans',
 };
-export const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,59}$/;
+export { NAME_RE as SLUG_RE } from './naming.mjs';
 export const FLOWS_ROOT = 'docs/flows';
 export const PLAN_ROOT = 'docs/plans';
 // the repo-avengers report.json fields this plugin reads; tests fail if the baseline fixture loses one

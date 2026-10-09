@@ -5,10 +5,10 @@ import { fileURLToPath } from 'node:url';
 
 const read = (p) => readFileSync(fileURLToPath(new URL(`../${p}`, import.meta.url)), 'utf8');
 
-test('plugin.json is mission-control 0.2.0', () => {
+test('plugin.json is mission-control 0.3.0', () => {
   const p = JSON.parse(read('.claude-plugin/plugin.json'));
   assert.equal(p.name, 'mission-control');
-  assert.equal(p.version, '0.2.0');
+  assert.equal(p.version, '0.3.0');
 });
 
 test('the marketplace is mc-local and lists only mission-control from ./', () => {
