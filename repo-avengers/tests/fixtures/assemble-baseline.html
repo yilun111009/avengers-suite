@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Team run - Team report</title>
+<style>
+:root{--bg:#fff;--fg:#1b1f24;--muted:#5b6670;--card:#f6f8fa;--line:#d0d7de;--accent:#0b7a3b;--bad:#b3261e}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0d1117;--fg:#e6edf3;--muted:#9aa5b1;--card:#161b22;--line:#30363d;--accent:#44d17a;--bad:#ff7b72}}
+:root[data-theme=dark]{--bg:#0d1117;--fg:#e6edf3;--muted:#9aa5b1;--card:#161b22;--line:#30363d;--accent:#44d17a;--bad:#ff7b72}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,Segoe UI,sans-serif}
+main{max-width:860px;margin:0 auto;padding:24px 16px 64px}h1{margin:0 0 4px;font-size:1.6rem}.muted,.meta{color:var(--muted)}.meta{font-size:.85rem}
+ul{list-style:none;padding:0;margin:8px 0;display:grid;gap:10px}.card,.item{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;overflow-wrap:anywhere}
+.item.bad{border-color:var(--bad)}.q{font-size:.88rem;color:var(--muted);font-style:italic}.tag{border:1px solid var(--line);border-radius:10px;padding:0 8px;font-size:.72rem}
+.age.bad{color:var(--bad);border:1px solid var(--bad);border-radius:10px;padding:0 8px;font-size:.72rem}a{color:var(--accent)}code{font:12.5px ui-monospace,Consolas,monospace}
+</style></head><body><main>
+<h1>Team run</h1>
+<div class="meta">Goal: the goal &middot; Treated as: Assemble question &middot; Generated 2026-10-08 &middot; commit <code>abc1234</code></div>
+<h2>Summary</h2>
+<div class="card"><p>combined</p><p class="muted">In plain words: plain</p></div>
+<h2>The team</h2>
+
+<ul><li class="item"><b>hulk</b> <span class="tag">sonnet</span> <span class="tag">impact</span>
+<div class="q">t hulk</div><p>hulk summary</p><p><a href="heroes/hulk/report.html">Open hulk's full report</a></p></li><li class="item bad"><b>loki</b> <span class="tag">sonnet</span> <span class="age bad">failed</span>
+<div class="q">t</div><p>e</p><p class="muted">Re-run only this hero with <code>/assemble rerun loki</code>. Nothing is re-run automatically.</p></li></ul>
+
+<h2>Confidence</h2>
+<h3>Confirmed in source</h3><ul><li>c</li></ul>
+<h2>Sources</h2><ul><li><code>a:1</code></li></ul>
+</main></body></html>

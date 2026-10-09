@@ -1,0 +1,15 @@
+{
+  "name": "rg-local",
+  "owner": {
+    "name": "yilun.lai"
+  },
+  "plugins": [
+    {
+      "name": "repo-avengers",
+      "source": "./",
+      "description": "Ask anything about the current repo (architecture, logic, workflow, support, impact), with citations and an HTML report written for dev, QA, PM or support.",
+      "category": "development",
+      "tags": ["codebase", "ask", "architecture", "report"]
+    }
+  ]
+}
