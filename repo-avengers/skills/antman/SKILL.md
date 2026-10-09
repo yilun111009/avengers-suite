@@ -1,6 +1,7 @@
 ---
 name: antman
 description: Ant-Man explains one function, method or class in the current repo line by line: inputs, branches, errors and side effects. Trigger: /antman
+argument-hint: "<function, method or class name>"
 ---
 
 # antman

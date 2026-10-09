@@ -176,3 +176,15 @@ test('the hero command wins over deep when choosing the look, and ironman is onl
   assert.match(step9, /in hero mode set `hero` to the hero's name even when `deep` was typed/);
   assert.match(step9, /only for plain `\/ask deep` set it to `ironman`/);
 });
+
+test('every skill shows a short usage hint after its command name (argument-hint)', () => {
+  const skills = readdirSync(fileURLToPath(new URL('../skills/', import.meta.url)));
+  assert.ok(skills.length >= 15);
+  for (const n of skills) {
+    const front = read(`skills/${n}/SKILL.md`).split('\n---\n')[0];
+    const m = /\nargument-hint: "([^"\n]+)"$/m.exec(front);
+    assert.ok(m, `${n} skill has no argument-hint in its frontmatter`);
+    assert.ok(m[1].length <= 70, `${n} argument-hint is too long to read at a glance`);
+    if (heroNames.includes(n) || n === 'ask' || n === 'explain') assert.match(m[1], /</, `${n} hint should name the argument`);
+  }
+});

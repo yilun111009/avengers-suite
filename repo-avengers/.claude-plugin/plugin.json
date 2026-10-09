@@ -1,7 +1,7 @@
 {
   "name": "repo-avengers",
   "description": "Ask anything about the current repo: architecture, logic rules, workflows, support issues, change impact, dead code, function deep dives and hidden risks, or a whole team with /assemble. Answers with file:line citations, written for developers, QA, PM or support, plus an HTML report.",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "author": {
     "name": "yilun.lai"
   },

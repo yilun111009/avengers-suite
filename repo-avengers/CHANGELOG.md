@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.1 - 2026-10-09 14:45
+
+### Added
+- Every command shows a short usage hint right after its name as you type it (the skill's `argument-hint`), for example `/ironman <hard question> (runs on opus, asks you first)` and `/hulk <what you plan to change, e.g. the Order status enum>`. `/ask` and `/explain` show their keywords: `[plain|text|deep] [for qa|pm|support] <question about this repo>`.
+
 ## 1.6.0 - 2026-10-09 14:28
 
 ### Changed
