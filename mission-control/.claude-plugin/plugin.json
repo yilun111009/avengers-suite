@@ -1,0 +1,7 @@
+{
+  "name": "mission-control",
+  "description": "Turn saved repo research (docs/flows reports) into an implementation plan, as HTML and Markdown. You choose the model that writes the plan.",
+  "version": "0.2.0",
+  "author": { "name": "yilun.lai" },
+  "keywords": ["plan", "planning", "implementation", "report"]
+}

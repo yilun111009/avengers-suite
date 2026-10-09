@@ -1,0 +1,40 @@
+{
+  "title": "Add partial refunds",
+  "goal": "Support partial refunds at checkout",
+  "summary": "Two stages: model the refunded amount, then wire it through the payout job.",
+  "stages": [
+    {
+      "name": "Model the refund",
+      "purpose": "Store how much of an order was refunded.",
+      "steps": [
+        {
+          "text": "Add a RefundedAmount field to Order",
+          "files": ["src/order.ts:12", "src/db/migrations"],
+          "change": "New nullable column and a getter that never exceeds the order total.",
+          "verify": "npm test -- order",
+          "risk": "The Order status enum is read in 4 places (refund-flow)."
+        },
+        {
+          "text": "Reject a refund larger than the remaining balance",
+          "files": ["src/refund.ts:40"],
+          "change": "Throw RefundTooLargeError before calling the provider.",
+          "verify": "npm test -- refund"
+        }
+      ],
+      "goNoGo": [{ "check": "npm test", "passWhen": "all green and no new lint errors" }]
+    },
+    {
+      "name": "Wire the payout job",
+      "steps": [
+        {
+          "text": "Pay out the net amount",
+          "files": ["src/payout.ts:88"],
+          "change": "Subtract RefundedAmount from the payout total.",
+          "verify": "npm test -- payout"
+        }
+      ],
+      "goNoGo": [{ "check": "Run the payout job on the staging fixture", "passWhen": "the net amount matches the hand calculation" }]
+    }
+  ],
+  "assumptions": ["The payment provider supports partial capture (only inferred in refund-flow)."]
+}
