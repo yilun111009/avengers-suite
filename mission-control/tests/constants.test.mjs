@@ -8,8 +8,8 @@ test('the three models and a one-line note for each', () => {
 });
 
 test('slugs: lowercase letters, digits, hyphens; no dots, slashes or leading hyphen', () => {
-  for (const ok of ['refund-flow', 'a', 'refund-flow-20261009']) assert.ok(SLUG_RE.test(ok), ok);
-  for (const bad of ['', '-x', '../x', 'a/b', 'A', 'a.b', 'a'.repeat(61)]) assert.ok(!SLUG_RE.test(bad), bad);
+  for (const ok of ['refund-flow', 'a', 'refund-flow-20261009', '2026-10-09-architecture-billing-module-layers-2']) assert.ok(SLUG_RE.test(ok), ok);
+  for (const bad of ['', '-x', '../x', 'a/b', 'A', 'a.b', 'a'.repeat(81)]) assert.ok(!SLUG_RE.test(bad), bad);
 });
 
 test('roots and the report fields the planner reads', () => {

@@ -35,7 +35,7 @@ A hero skill (`/thor`, `/captainamerica`, `/drstrange`, `/blackwidow`, `/hulk`, 
 
 - The **agent** is read-only by construction: its tool list is `Read, Grep, Glob`. It cannot write or run commands.
 - **You (this skill)** may write only to: `docs/flows/**` and `.claude/avengers-hints.md`. Never write, edit or delete any other path, and never run a command that modifies the repository (no formatters, no installs, no git writes). If something seems to require touching source, stop and tell the user.
-- Commands you may run are limited to: `node "<scripts dir>/check-onboarding.mjs" ...`, `node "<scripts dir>/detect-route.mjs" ...`, `node "<scripts dir>/build-report.mjs" ...`, `node "<scripts dir>/build-index.mjs" ...`, `node "<scripts dir>/migrate-reports.mjs" ...`, `node "<scripts dir>/plan-team.mjs" ...`, `node "<scripts dir>/build-assemble.mjs" ...`, `graphify query|path|explain ...` (only if `graphify-out/graph.json` exists), `git log -1 --format=%cI`, `git rev-parse`. Nothing else.
+- Commands you may run are limited to: `node "<scripts dir>/check-onboarding.mjs" ...`, `node "<scripts dir>/detect-route.mjs" ...`, `node "<scripts dir>/build-report.mjs" ...`, `node "<scripts dir>/build-index.mjs" ...`, `node "<scripts dir>/name-folder.mjs" ...`, `node "<scripts dir>/migrate-reports.mjs" ...`, `node "<scripts dir>/plan-team.mjs" ...`, `node "<scripts dir>/build-assemble.mjs" ...`, `graphify query|path|explain ...` (only if `graphify-out/graph.json` exists), `git log -1 --format=%cI`, `git rev-parse`. Nothing else.
 - `<ask dir>` is the "Base directory for this skill" path shown when this skill loaded. `<plugin dir>` is `<ask dir>/../..`. `<scripts dir>` is `<plugin dir>/engine`, where the scripts live.
 
 ## Steps
@@ -98,14 +98,20 @@ Every question gets its own folder: `docs/flows/<slug>/`. Nothing but `index.htm
 1. Extract the agent's last ```json block. If missing/invalid, say so and offer a re-run; do not hand-write it.
 2. Check the JSON for secrets before writing: if any field looks like a password, key, token or connection string, remove it and tell the user. `build-report.mjs` also scans and refuses (exit code 3, no HTML written) if it finds one; redact the flagged fields in `report.json` and re-run. Never print the secret value.
 3. Make sure `type` and `audience` are present and are among the known values; if not, set them to the values you routed with. Stamp the JSON so the report can show its age later: set `generated` to today (`YYYY-MM-DD`) and `commit` to the output of `git rev-parse --short HEAD` (omit `commit` if not a git repo). Also set `hero`: in hero mode set `hero` to the hero's name even when `deep` was typed (`/hulk deep ...` is a Hulk report), only for plain `/ask deep` set it to `ironman`, and omit `hero` in plain `/ask`. Set `hero` only when `forMe` is true: a report for someone else (an audience named in the question, `plain`, or the "Someone else" reply) omits `hero`, so it carries no emblem, band or hero tagline. The report builder uses it to pick the look in `themes/`; an absent or unknown value just means no look. Do not hand-edit these when rebuilding; keep the values already in `report.json`.
-4. Pick the folder: slug = short lowercase letters, digits, hyphens from the question (max ~50 chars). If `docs/flows/<slug>/` already exists, use `<slug>-<YYYYMMDD>`; if that exists too, append `-2`, `-3`.
+4. Pick the folder with the script, never by hand. Pass the report's `title` through a quoted heredoc (first collapse any line breaks in it to single spaces) and the routed type:
+   ```
+   node "<scripts dir>/name-folder.mjs" docs/flows --type <type> <<'TITLE_END'
+   <the report title>
+   TITLE_END
+   ```
+   It prints `<slug>`, shaped `<YYYY-MM-DD>-<type>-<topic>` (for example `2026-10-09-impact-order-status-enum`), with `-2`, `-3` added when the name is taken. Use it exactly as printed. Folders made before 1.6.0 keep their old names; never rename them.
 5. Write into the folder:
    - `report.json`: the agent's JSON
    - `report.html`: built by `node "<scripts dir>/build-report.mjs" docs/flows/<slug>/report.json docs/flows/<slug>/report.html` (add `--plain` to open a developer report on the plain view). It opens on the plain view by itself when the audience is not `dev`. If it errors, show the error; keep the JSON.
    - `answer.md`: the question verbatim, date, the `Treated as:` line, then the prose answer you relayed (citations, flags, confidence). Never include secret values.
 6. Refresh the index: `node "<scripts dir>/build-index.mjs" docs/flows` (writes `docs/flows/index.html`, a searchable list of every question folder with a type filter). Then give the absolute path of `report.html` and mention the index. Open it in the browser only if the user asks.
 7. If the user wants the same question written for another audience, run it again with that audience named. Do not rewrite the report by hand.
-8. For `text` mode (no report), still write `docs/flows/<slug>/answer.md` only if the user asks to keep the answer.
+8. For `text` mode (no report), still write `docs/flows/<slug>/answer.md` only if the user asks to keep the answer. Pick `<slug>` as in item 4, passing the question instead of a title.
 
 Layout:
 ```
@@ -113,11 +119,13 @@ docs/flows/
   index.html              (list of all reports, rebuilt after each run)
   _repo-profile.md        (onboarding, one per repo)
   _onboarding.md
-  checkout-flow/
+  2026-10-09-workflow-checkout-flow/
     report.html
     report.json
     answer.md
-  refund-flow/
+  2026-10-09-logic-refund-rules/
+    ...
+  refund-flow/            (made before 1.6.0: old names stay as they are)
     ...
 ```
 

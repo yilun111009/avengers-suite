@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.6.0 - 2026-10-09 14:28
+
+### Changed
+- Report folders are named `<YYYY-MM-DD>-<type>-<topic>` (for example `docs/flows/2026-10-09-impact-order-status-enum/`), and `/assemble` runs `<YYYY-MM-DD>-assemble-<topic>`. The date leads so folders sort by date; the type makes `ls -d docs/flows/*-impact-*` work. A taken name gets `-2`, `-3`. Before, the name had no date unless it was taken (`refund-flow`, then `refund-flow-20261009`), so the names had two shapes and did not sort.
+- `/ask` and `/assemble` pick the folder with a script instead of writing the name by hand, so every name follows the rule.
+
+### Added
+- `engine/naming.mjs`: the naming rule shared with mission-control (it keeps an identical copy, checked by its tests). The topic comes from the report title, cut at a word to at most 40 characters; the date is the local date.
+- `engine/name-folder.mjs <flowsDir> --type <type>` (title on stdin): prints a free folder name and creates nothing.
+
+### Notes
+- Existing folders are not renamed and keep working everywhere (`/plainreport`, `/assemble rerun`, the index, `/flightplan`).
+
 ## 1.5.6 - 2026-10-09 10:57
 
 ### Fixed

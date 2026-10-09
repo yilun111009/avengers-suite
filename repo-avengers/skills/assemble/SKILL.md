@@ -16,7 +16,7 @@ Fury is this skill. He is not an agent. Planning and merging happen here; only t
 
 - Every hero is the read-only `repo-avengers` agent (`Read, Grep, Glob`). It cannot write or run commands.
 - **You (this skill)** may write only to `docs/flows/**` and `.claude/avengers-hints.md`. Never write, edit or delete any other path, and never run a command that modifies the repository. This limit is an instruction, not a technical barrier.
-- Commands you may run: `node "<scripts dir>/check-onboarding.mjs" ...`, `node "<scripts dir>/plan-team.mjs" ...`, `node "<scripts dir>/detect-route.mjs" ...`, `node "<scripts dir>/build-report.mjs" ...`, `node "<scripts dir>/build-assemble.mjs" ...`, `node "<scripts dir>/build-index.mjs" ...`, `graphify query|path|explain ...` (only if `graphify-out/graph.json` exists), `git log -1 --format=%cI`, `git rev-parse`. Nothing else.
+- Commands you may run: `node "<scripts dir>/check-onboarding.mjs" ...`, `node "<scripts dir>/plan-team.mjs" ...`, `node "<scripts dir>/detect-route.mjs" ...`, `node "<scripts dir>/build-report.mjs" ...`, `node "<scripts dir>/build-assemble.mjs" ...`, `node "<scripts dir>/build-index.mjs" ...`, `node "<scripts dir>/name-folder.mjs" ...`, `graphify query|path|explain ...` (only if `graphify-out/graph.json` exists), `git log -1 --format=%cI`, `git rev-parse`. Nothing else.
 - `<assemble dir>` is the "Base directory for this skill". `<plugin dir>` is `<assemble dir>/../..`. `<scripts dir>` is `<plugin dir>/engine`.
 - Approval, the cap of 5 and the write limit are instructions in this text. The only technical barrier is the agent's tool list.
 
@@ -70,7 +70,15 @@ If `ok` is false, show the errors and keep the previous plan, then ask for anoth
 - `Cancel`: On `Cancel`, stop; no hero runs and no team report is written (onboarding, if it ran in step 2, has already written its files).
 
 ### 5. Run the heroes (in parallel)
-Pick `<slug>` first, before anything is written: lowercase letters, digits and hyphens from the goal (max ~50 chars); if `docs/flows/<slug>/` already exists use `<slug>-<YYYYMMDD>`, and if that exists too append `-2`, `-3`. The same folder is used for the combined page and every hero.
+Pick `<slug>` first, before anything is written, with the script, never by hand. Write a short title for the goal (3 to 6 words; use the same text as the combined report's `title` in step 7) and pass it through a quoted heredoc:
+
+```
+node "<scripts dir>/name-folder.mjs" docs/flows --type assemble <<'TITLE_END'
+<the short title>
+TITLE_END
+```
+
+It prints `<slug>`, shaped `<YYYY-MM-DD>-assemble-<topic>` (for example `2026-10-09-assemble-refund-flow`), with `-2`, `-3` added when the name is taken. Use it exactly as printed. The same folder is used for the combined page and every hero.
 
 For each hero in the approved plan, read `<plugin dir>/heroes/<hero>.md` and `<plugin dir>/audiences/<audience>.md` (audience: the one named in step 1, else the hero's default). Build the context block exactly as in the `ask` skill's step 6 (freshness, one `graphify` result if a graph exists, the profile, the hints).
 

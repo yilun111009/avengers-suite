@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 - 2026-10-09 14:28
+
+### Changed
+- Plan folders are named `<YYYY-MM-DD>-<topic>` (for example `docs/plans/2026-10-09-add-partial-refunds/`), with `-2`, `-3` when taken. Before, the date was added only when the name was taken.
+- `/flightplan` accepts a report folder by its topic alone: `refund-flow` finds the newest `<date>-<type>-refund-flow` folder written by repo-avengers 1.6.0. A full folder name, old or new, still works and always wins. The outline shows the folders used.
+- Report folder names may now be up to 80 characters (was 60), to fit the date and type.
+
+### Added
+- `engine/naming.mjs`: a copy of repo-avengers' naming rule; a test fails if the two drift apart (skipped when repo-avengers is not a sibling folder). It replaces `engine/slug.mjs`.
+
 ## 0.2.0 - 2026-10-09 11:56
 
 ### Added

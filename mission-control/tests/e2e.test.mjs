@@ -23,7 +23,7 @@ test('the whole pipeline on a temp repo, running the same commands the skill run
   assert.equal(counts.ok, 2);
 
   const slug = runCli('plan-slug.mjs', [repo], 'Add partial refunds\n').stdout.trim();
-  assert.equal(slug, 'add-partial-refunds');
+  assert.match(slug, /^\d{4}-\d{2}-\d{2}-add-partial-refunds$/);
   const dir = join(repo, 'docs', 'plans', slug);
   put(repo, `docs/plans/${slug}/plan.json`, fx('plan-sample.json'));
   writeFileSync(join(dir, 'checks.json'), checked.stdout);

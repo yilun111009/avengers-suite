@@ -4,20 +4,32 @@ A Claude Code plugin marketplace with two plugins that work as a pair: one resea
 
 | Plugin | What it does | Writes to |
 |---|---|---|
-| [`repo-avengers`](repo-avengers/README.md) | Ask anything about the repo you are in (architecture, logic, workflow, support, impact, dead code, deep dive, risk). You get an answer with `file:line` citations and a self-contained HTML report written for dev, QA, PM or support. | `docs/flows/<slug>/` |
-| [`mission-control`](mission-control/README.md) | Turn saved reports into an implementation plan (`plan.html` and `plan.md`) on a model you choose. Read-only: it never changes your code. | `docs/plans/<name>/` |
+| [`repo-avengers`](repo-avengers/README.md) | Ask anything about the repo you are in (architecture, logic, workflow, support, impact, dead code, deep dive, risk). You get an answer with `file:line` citations and a self-contained HTML report written for dev, QA, PM or support. | `docs/flows/<date>-<type>-<topic>/` |
+| [`mission-control`](mission-control/README.md) | Turn saved reports into an implementation plan (`plan.html` and `plan.md`) on a model you choose. Read-only: it never changes your code. | `docs/plans/<date>-<topic>/` |
 
 ## How they fit together
 
 ```
-/ask how does the refund flow work        -> docs/flows/refund-flow/report.json (+ HTML)
-/flightplan refund-flow add partial refunds -> docs/plans/<name>/plan.html + plan.md
+/ask how does the refund flow work           -> docs/flows/2026-10-09-workflow-refund-flow/report.html
+/flightplan refund-flow add partial refunds  -> docs/plans/2026-10-09-add-partial-refunds/plan.html
 ```
 
 1. `repo-avengers` saves a report per question.
 2. `mission-control` reads those reports, re-checks every cited `file:line` against the current code, and asks you to approve a model and a level of detail before planning.
 
 The plugins are coupled only through the `report.json` schema. `mission-control` depends on these fields: `title`, `question`, `summary`, `type`, `generated`, `commit`, `steps`, `rules`, `sources`, `confidence`, `sections`. Its fixture `mission-control/tests/fixtures/report-baseline.json` must stay in sync with `repo-avengers/tests/fixtures/report-baseline.json`; a test fails if they drift.
+
+## Folder names
+
+Both plugins name their folders with one shared rule (`engine/naming.mjs`; mission-control holds a copy that a test keeps identical):
+
+| Saved | Format | Example |
+|---|---|---|
+| Report | `<YYYY-MM-DD>-<type>-<topic>` | `docs/flows/2026-10-09-impact-order-status-enum/` |
+| Assemble run | `<YYYY-MM-DD>-assemble-<topic>` | `docs/flows/2026-10-09-assemble-refund-flow/` |
+| Plan | `<YYYY-MM-DD>-<topic>` | `docs/plans/2026-10-09-add-partial-refunds/` |
+
+The date comes first so `ls` sorts oldest to newest. A taken name gets `-2`, `-3`. Search with globs such as `ls -d docs/flows/*-impact-*` or `ls docs/flows/2026-10-*`. `/flightplan` accepts a topic alone (`refund-flow`) and picks the newest matching folder. Folders made before this rule keep their old names and still work.
 
 ## Install
 
