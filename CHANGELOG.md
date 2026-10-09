@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.5 - 2026-10-09 10:25
+
+### Changed
+- The plain `/assemble` team page (`build-assemble.mjs --no-theme`, used by `/plainreport`) now labels each card Agent 1, Agent 2 and so on, by position, instead of the hero's name. The "Open ... full report" link and the "where the agents disagree" list use the same numbers; a disagreement with a hero that is not in the run reads "another agent". A failed hero reads "did not finish" and no longer shows the `/assemble rerun <hero>` command. The themed page is unchanged.
+- Changelog headings now carry the time after the date (`## 1.5.5 - 2026-10-09 10:25`), starting with this entry.
+
+### Notes
+- Free text is not edited: a hero's name inside a summary or task can still appear, and the folders on disk are still `heroes/<hero>/`.
+
 ## 1.5.4 - 2026-10-09
 
 ### Added

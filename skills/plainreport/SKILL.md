@@ -24,7 +24,7 @@ Usage:
 ## Team folder
 A team folder has `report.json` with `type: assemble` and a `heroes/<hero>/report.json` for each hero that finished. Build every plain page, so the plain team page has no link that leads back to a themed one:
 1. For each `heroes/<folder>/report.json` that exists, run the step 3 command for that folder (output `heroes/<folder>/report.plain.html`). A hero with no `report.json` (it failed) is skipped.
-2. Then build the team page: `node "<scripts dir>/build-assemble.mjs" docs/flows/<slug>/report.json docs/flows/<slug>/report.plain.html --no-theme`. The hero cards still show each hero's name and summary, but have no emblem or coloured edge, and link to that hero's `report.plain.html`.
+2. Then build the team page: `node "<scripts dir>/build-assemble.mjs" docs/flows/<slug>/report.json docs/flows/<slug>/report.plain.html --no-theme`. The hero cards are labelled Agent 1, Agent 2 ... instead of the hero's name (a failed hero reads "did not finish", with no rerun command), keep their summary, have no emblem or coloured edge, and link to that hero's `report.plain.html`. The skill does not edit the free text of a summary, so a hero's name written inside it can remain.
 3. If any build exits with code 3, tell the user which fields it named (never the value), keep going with the other folders, and say which pages were not written.
 4. Give the absolute path of the team `report.plain.html` and the count of hero pages rebuilt.
 

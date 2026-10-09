@@ -252,20 +252,51 @@ function buildPlain(obj, env = {}) {
   return { status: r.status, stderr: r.stderr, html: existsSync(outPath) ? readFileSync(outPath, 'utf8') : '', json: readFileSync(inPath, 'utf8'), text };
 }
 
-test('--no-theme gives the pre-theme team page, except that cards link to each hero\'s plain report', () => {
+test('--no-theme drops the band, emblems and edges, shows Agent N instead of hero names, and leaves the JSON alone', () => {
   const r = buildPlain(JSON.parse(readFileSync(asmJson, 'utf8')));
   assert.equal(r.status, 0, r.stderr);
   assert.doesNotMatch(r.html, /class="band"|class="emblem"|--hero|The team has assembled\./);
-  assert.equal(r.html, asmHtml.replace(/report\.html"/g, 'report.plain.html"').replace(/(href="heroes\/[^"]*)report\.plain\.html"/g, '$1report.plain.html"'));
+  assert.match(r.html, /<b>Agent 1<\/b>/);
+  assert.match(r.html, /<b>Agent 2<\/b>/);
+  assert.doesNotMatch(r.html, /<b>(hulk|loki)<\/b>/);
   assert.equal(r.json, r.text);
 });
 
-test('--no-theme keeps the hero names and summaries on the cards and links only to plain hero pages', () => {
+test('--no-theme links Agent N to the plain hero page and never to a themed one', () => {
   const r = buildPlain({ ...BASE });
-  assert.match(r.html, /<b>hulk<\/b>/);
-  assert.match(r.html, /hulk summary/);
-  assert.match(r.html, /href="heroes\/hulk\/report\.plain\.html"/);
+  assert.match(r.html, /<a href="heroes\/hulk\/report\.plain\.html">Open Agent 1's full report<\/a>/);
+  assert.match(r.html, /<a href="heroes\/loki\/report\.plain\.html">Open Agent 2's full report<\/a>/);
   assert.doesNotMatch(r.html, /href="heroes\/[^"]*\/report\.html"/);
+  assert.match(r.html, /hulk summary/);
+});
+
+test('--no-theme numbers a repeated hero by position, so hulk and hulk-2 are two agents', () => {
+  const r = buildPlain({ ...BASE, results: [ok('hulk'), ok('loki'), ok('hulk-2')] });
+  assert.match(r.html, /<b>Agent 1<\/b>/);
+  assert.match(r.html, /<b>Agent 3<\/b>/);
+  assert.doesNotMatch(r.html, /hulk-2<\/b>/);
+});
+
+test('--no-theme shows a failed hero as "did not finish" with no hero name and no rerun command', () => {
+  const r = buildPlain({ ...BASE, results: [ok('hulk'), { hero: 'loki', model: 'sonnet', task: 't', status: 'failed', error: 'boom' }] });
+  const card = r.html.split('<li class="item').find((c) => c.startsWith(' bad'));
+  assert.ok(card);
+  assert.match(card, /<b>Agent 2<\/b>/);
+  assert.match(card, /did not finish/);
+  assert.doesNotMatch(card, /assemble rerun|loki|>failed</);
+});
+
+test('--no-theme maps a disagreement to Agent numbers and drops the hero names from its wording', () => {
+  const r = buildPlain({ ...BASE, results: [ok('hulk'), ok('loki', { disagrees: [{ with: 'hulk', about: 'the claim', mine: 'a.js:1', theirs: 'b.js:2' }] })] });
+  assert.match(r.html, /<b>Agent 2<\/b> vs <b>Agent 1<\/b> about the claim/);
+  assert.match(r.html, /Where the agents disagree/);
+  assert.doesNotMatch(r.html, /Fury's inference|Where the heroes disagree/);
+});
+
+test('--no-theme maps a disagreement with an unknown hero to "another agent" rather than leaking a name', () => {
+  const r = buildPlain({ ...BASE, results: [ok('loki', { disagrees: [{ with: 'thanos', about: 'x', mine: 'm', theirs: 't' }] })] });
+  assert.match(r.html, /<b>Agent 1<\/b> vs <b>another agent<\/b>/);
+  assert.doesNotMatch(r.html, /thanos/);
 });
 
 test('--no-theme still refuses a bad link and a secret', () => {

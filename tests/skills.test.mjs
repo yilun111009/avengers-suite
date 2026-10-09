@@ -164,6 +164,8 @@ test('plainreport rebuilds with --no-theme into report.plain.html, keeps the ori
   assert.match(s, /`type` is `assemble`/);
   assert.match(s, /build-assemble\.mjs" docs\/flows\/<slug>\/report\.json docs\/flows\/<slug>\/report\.plain\.html --no-theme/);
   assert.match(s, /has no link that leads back to a themed one/);
+  assert.match(s, /labelled Agent 1, Agent 2/);
+  assert.match(s, /does not edit the free text/);
   assert.doesNotMatch(s, /team page is not supported/);
   assert.match(s, /Never accept a path with `\.\.`/);
   assert.match(s, /No agent runs|does not rewrite the answer/);

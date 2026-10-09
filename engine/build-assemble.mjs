@@ -43,24 +43,31 @@ export function render(d, { plain = false } = {}) {
   const pluginDir = process.env.AVENGERS_PLUGIN_DIR ?? fileURLToPath(new URL('../', import.meta.url));
   const fury = plain ? null : themeFor('fury', pluginDir);
   const done = results.filter((r) => r.status === 'ok');
+  // plain page: heroes are shown as Agent 1, Agent 2 ... by position, so a hero name never appears in the page's own wording.
+  // A disagreement names the other hero by name; it maps to the first agent with that name.
+  const agentNo = new Map(results.map((r, i) => [r, i + 1]));
+  const firstByHero = new Map();
+  results.forEach((r, i) => { if (typeof r.hero === 'string' && !firstByHero.has(r.hero)) firstByHero.set(r.hero, i + 1); });
+  const who = (r) => (plain ? `Agent ${agentNo.get(r)}` : r.hero);
+  const whoNamed = (name) => (plain ? (firstByHero.has(name) ? `Agent ${firstByHero.get(name)}` : 'another agent') : name);
   const card = (r) => {
     if (r.status !== 'ok') {
-      return `<li class="item bad"><b>${esc(r.hero)}</b> <span class="tag">${esc(r.model)}</span> <span class="age bad">failed</span>
-<div class="q">${esc(r.task)}</div><p>${esc(r.error || 'no result')}</p><p class="muted">Re-run only this hero with <code>/assemble rerun ${esc(r.hero)}</code>. Nothing is re-run automatically.</p></li>`;
+      return `<li class="item bad"><b>${esc(who(r))}</b> <span class="tag">${esc(r.model)}</span> <span class="age bad">${plain ? 'did not finish' : 'failed'}</span>
+<div class="q">${esc(r.task)}</div><p>${esc(r.error || 'no result')}</p>${plain ? '' : `<p class="muted">Re-run only this hero with <code>/assemble rerun ${esc(r.hero)}</code>. Nothing is re-run automatically.</p>`}</li>`;
     }
     // the path is validated first; the plain page then points at the plain copy of the same hero folder
     const safe = safeLink(r.reportPath);
     const link = safe && plain ? safe.replace(/report\.html$/, 'report.plain.html') : safe;
     // a repeated hero is named hulk-2, hulk-3 ...; its look is the base hero's
     const t = plain ? null : themeFor(typeof r.hero === 'string' ? r.hero.replace(/-\d+$/, '') : r.hero, pluginDir);
-    return `<li class="item"${t ? ` style="--hero:${t.accent};--hero-d:${t.accentDark}"` : ''}>${t ? t.emblemSvg + ' ' : ''}<b>${esc(r.hero)}</b> <span class="tag">${esc(r.model)}</span> <span class="tag">${esc(r.type)}</span>
-<div class="q">${esc(r.task)}</div><p>${esc(r.summary)}</p>${link ? `<p><a href="${esc(link)}">Open ${esc(r.hero)}'s full report</a></p>` : ''}</li>`;
+    return `<li class="item"${t ? ` style="--hero:${t.accent};--hero-d:${t.accentDark}"` : ''}>${t ? t.emblemSvg + ' ' : ''}<b>${esc(who(r))}</b> <span class="tag">${esc(r.model)}</span> <span class="tag">${esc(r.type)}</span>
+<div class="q">${esc(r.task)}</div><p>${esc(r.summary)}</p>${link ? `<p><a href="${esc(link)}">Open ${esc(who(r))}'s full report</a></p>` : ''}</li>`;
   };
   const conf = mergeConfidence(results);
   const confList = (title, items) => (items.length ? `<h3>${title}</h3><ul>${items.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '');
   const dis = collectDisagreements(results);
   const disHtml = dis.length
-    ? `<h2>Where the heroes disagree</h2><p class="muted">Fury's inference from conflicting citations; the heroes' own reports are linked above.</p><ul>${dis.map((x) => `<li><b>${esc(x.hero)}</b> vs <b>${esc(x.with)}</b> about ${esc(x.about)}: <code>${esc(x.mine)}</code> against <code>${esc(x.theirs)}</code></li>`).join('')}</ul>`
+    ? `<h2>Where the ${plain ? 'agents' : 'heroes'} disagree</h2><p class="muted">${plain ? 'An' : "Fury's"} inference from conflicting citations; the ${plain ? 'agents' : 'heroes'}' own reports are linked above.</p><ul>${dis.map((x) => `<li><b>${esc(plain ? whoNamed(x.hero) : x.hero)}</b> vs <b>${esc(plain ? whoNamed(x.with) : x.with)}</b> about ${esc(x.about)}: <code>${esc(x.mine)}</code> against <code>${esc(x.theirs)}</code></li>`).join('')}</ul>`
     : '';
   const sources = mergeSources(results);
   return `<!doctype html>
