@@ -1,6 +1,6 @@
 ---
 name: flight-director
-description: Writes an implementation plan from saved repo research (repo-avengers reports) and a goal. Read-only: it can read the repository but cannot change anything. Returns the plan as JSON only.
+description: "Writes an implementation plan from saved repo research (repo-avengers reports) and a goal. Read-only: it can read the repository but cannot change anything. Returns the plan as JSON only."
 tools: Read, Grep, Glob
 ---
 

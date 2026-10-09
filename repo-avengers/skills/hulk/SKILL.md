@@ -1,6 +1,6 @@
 ---
 name: hulk
-description: Hulk shows what breaks if you change or remove something in the current repo: blast radius ranked by risk and the tests to run. Trigger: /hulk
+description: "Hulk shows what breaks if you change or remove something in the current repo: blast radius ranked by risk and the tests to run. Trigger: /hulk"
 argument-hint: "<what you plan to change, e.g. the Order status enum>"
 ---
 

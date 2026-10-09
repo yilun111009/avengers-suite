@@ -188,3 +188,27 @@ test('every skill shows a short usage hint after its command name (argument-hint
     if (heroNames.includes(n) || n === 'ask' || n === 'explain') assert.match(m[1], /</, `${n} hint should name the argument`);
   }
 });
+
+// Claude Code parses frontmatter as YAML and drops ALL of it on a parse error (no description, no hint, no tools limit).
+// A plain value with ": " (e.g. "Trigger: /x") is such an error, so a value is either "double-quoted JSON" or plain and safe.
+const yamlProblems = (file) => {
+  const front = /^---\n([\s\S]*?)\n---\n/.exec(read(file))?.[1];
+  if (front == null) return ['no frontmatter'];
+  return front.split('\n').flatMap((line) => {
+    const m = /^([a-z][a-z-]*): (.+)$/.exec(line);
+    if (!m) return [`not a "key: value" line: ${line}`];
+    const v = m[2];
+    if (v.startsWith('"')) { try { JSON.parse(v); return []; } catch { return [`${m[1]}: bad quoted value`]; } }
+    if (/: | #|^[\[\]{}>|*&!%@`'"]/.test(v)) return [`${m[1]}: plain value that YAML misreads; quote it`];
+    return [];
+  });
+};
+
+test('every skill and agent has frontmatter that Claude Code can parse as YAML', () => {
+  const files = [
+    ...readdirSync(fileURLToPath(new URL('../skills/', import.meta.url))).map((n) => `skills/${n}/SKILL.md`),
+    ...readdirSync(fileURLToPath(new URL('../agents/', import.meta.url))).map((n) => `agents/${n}`),
+  ];
+  for (const f of files) assert.deepEqual(yamlProblems(f), [], f);
+  assert.deepEqual(yamlProblems('skills/hawkeye/SKILL.md'), []);
+});

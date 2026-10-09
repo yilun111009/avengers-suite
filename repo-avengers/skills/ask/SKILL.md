@@ -1,6 +1,6 @@
 ---
 name: ask
-description: Ask anything about the current repo (architecture, logic rules, workflows, support and troubleshooting, change impact) and get a cited answer written for the right audience (dev, QA, PM, support), by delegating to the read-only repo-avengers agent. First run in a repo does a one-time onboarding (preflight checks + repo profile). Writes a self-contained HTML report into its own folder docs/flows/<slug>/ by default. `plain` gives a non-technical view; `text` skips the report. Works in any repository. Trigger: /ask (alias /explain)
+description: "Ask anything about the current repo (architecture, logic rules, workflows, support and troubleshooting, change impact) and get a cited answer written for the right audience (dev, QA, PM, support), by delegating to the read-only repo-avengers agent. First run in a repo does a one-time onboarding (preflight checks + repo profile). Writes a self-contained HTML report into its own folder docs/flows/<slug>/ by default. `plain` gives a non-technical view; `text` skips the report. Works in any repository. Trigger: /ask (alias /explain)"
 argument-hint: "[plain|text|deep] [for qa|pm|support] <question about this repo>"
 ---
 

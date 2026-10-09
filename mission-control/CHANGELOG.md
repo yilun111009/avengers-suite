@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.2 - 2026-10-09 16:30
+
+### Fixed
+- `/flightplan` showed no description or usage hint in the command menu, and the `flight-director` agent's frontmatter could not be read either. Both descriptions contained `: ` unquoted, which is invalid YAML, so Claude Code dropped the whole frontmatter, which may include the agent's `tools: Read, Grep, Glob` limit. The descriptions are now quoted.
+
+### Added
+- A test that the skill and the agent have frontmatter Claude Code can parse.
+
 ## 0.3.1 - 2026-10-09 14:45
 
 ### Added

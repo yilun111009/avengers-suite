@@ -1,6 +1,6 @@
 ---
 name: captainamerica
-description: Captain America checks the rules in the current repo: what is allowed, when things happen and why something is refused, with citations and an HTML report. Trigger: /captainamerica
+description: "Captain America checks the rules in the current repo: what is allowed, when things happen and why something is refused, with citations and an HTML report. Trigger: /captainamerica"
 argument-hint: "<rule to check, e.g. what are the refund limits>"
 ---
 

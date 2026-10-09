@@ -1,6 +1,6 @@
 ---
 name: flightplan
-description: Turn saved repo-avengers research (docs/flows/<slug>/ reports) into an implementation plan, written as plan.html and plan.md. The Flight Director plans on the model you choose; there is no default model. Read-only on your code. Trigger: /flightplan
+description: "Turn saved repo-avengers research (docs/flows/<slug>/ reports) into an implementation plan, written as plan.html and plan.md. The Flight Director plans on the model you choose; there is no default model. Read-only on your code. Trigger: /flightplan"
 argument-hint: "<report-folder>... [on opus|sonnet|haiku] <goal>"
 ---
 
