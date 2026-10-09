@@ -111,6 +111,18 @@ Naming an audience, so the answer is written for someone other than a developer.
 
 Answers for QA, PM and support use no code names in the body and end with source references for a developer to check before forwarding.
 
+### Plain copy of a saved report
+
+Already have a hero report and want it without the hero look (to forward it, say)? `/plainreport` rebuilds it as `report.plain.html` next to the themed `report.html`. No agent runs and nothing is rewritten:
+
+```
+/plainreport                           # the most recent report in docs/flows/
+/plainreport refund-flow               # docs/flows/refund-flow/
+/plainreport refund-flow/heroes/hulk   # one hero's report from an /assemble run
+```
+
+It does not change the wording; for an answer written for someone else use `/ask for <audience> ...`. The `/assemble` team page is not supported. Under the hood it runs `build-report.mjs ... --no-theme`.
+
 ### Assemble (Fury)
 
 `/assemble <goal>` plans a team instead of answering directly. Fury splits the goal into sub-questions, picks a hero for each and a model for each, and shows you the plan before anything runs:

@@ -156,6 +156,16 @@ test('the hero look is only for the user: a named audience (even dev) leaves her
   assert.match(step9, /omits `hero`, so it carries no emblem, band or hero tagline/);
 });
 
+test('plainreport rebuilds with --no-theme into report.plain.html, keeps the originals, and skips the team page', () => {
+  const s = read('skills/plainreport/SKILL.md').replace(/\r\n/g, '\n');
+  assert.match(s, /^---\nname: plainreport\n/);
+  assert.match(s, /build-report\.mjs" docs\/flows\/<slug>\/report\.json docs\/flows\/<slug>\/report\.plain\.html --no-theme/);
+  assert.match(s, /Keep the original `report\.json` and `report\.html`/);
+  assert.match(s, /`type` is `assemble`/);
+  assert.match(s, /Never accept a path with `\.\.`/);
+  assert.match(s, /No agent runs|does not rewrite the answer/);
+});
+
 test('the hero command wins over deep when choosing the look, and ironman is only for plain /ask deep', () => {
   const step9 = ask.split('### 9. Report')[1].split('Layout:')[0];
   assert.match(step9, /in hero mode set `hero` to the hero's name even when `deep` was typed/);

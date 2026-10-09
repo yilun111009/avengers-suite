@@ -202,8 +202,8 @@ test('preflight fails on a stray skill folder that has no hero file, and names t
   assert.match(f.problem, /skills\/stray/);
 });
 
-test('preflight ignores the ask, assemble and explain skill folders', () => {
-  const plugin = makePlugin({ 'skills/ask': '# ask\n', 'skills/assemble': '# assemble\n', 'skills/explain': '# explain\n' });
+test('preflight ignores the ask, assemble, explain and plainreport skill folders', () => {
+  const plugin = makePlugin({ 'skills/ask': '# ask\n', 'skills/assemble': '# assemble\n', 'skills/explain': '# explain\n', 'skills/plainreport': '# plainreport\n' });
   assert.equal(preflight({ plugin }).ok, true);
 });
 

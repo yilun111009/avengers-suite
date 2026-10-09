@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.3 - 2026-10-09
+
+### Added
+- `/plainreport [<slug>]`: rebuilds a saved hero report as `report.plain.html` with no emblem, header band or hero tagline. No agent runs and the report JSON and the themed `report.html` are left as they are. The wording is not rewritten; for another audience use `/ask for <audience>`. The `/assemble` team page is not supported.
+- `build-report.mjs --no-theme`: builds the plain page from a report that has a `hero`. Without the flag nothing changes.
+
 ## 1.5.2 - 2026-10-09
 
 ### Changed

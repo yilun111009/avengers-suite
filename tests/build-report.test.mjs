@@ -146,6 +146,22 @@ test('hero hulk adds the band, the emblem, the tagline and the three accent over
   assert.match(r.html, /:root\[data-theme=dark\]\{--accent:#7bd88f\}/);
 });
 
+test('--no-theme on a hero report gives the same page as a report with no hero, and leaves the JSON alone', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'avengers-notheme-'));
+  const inPath = join(dir, 'report.json');
+  const outPath = join(dir, 'report.plain.html');
+  const text = JSON.stringify({ ...baseObj(), hero: 'hulk' });
+  writeFileSync(inPath, text);
+  const r = spawnSync(process.execPath, [script, inPath, outPath, '--no-theme'], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(readFileSync(outPath, 'utf8'), baselineHtml);
+  assert.equal(readFileSync(inPath, 'utf8'), text);
+});
+
+test('without --no-theme a hero report still gets its look', () => {
+  assert.match(buildFile({ ...baseObj(), hero: 'hulk' }).html, /class="band"/);
+});
+
 test('the themed title is still a real h1, escaped, and the rest of the page is unchanged', () => {
   const r = buildFile({ ...baseObj(), hero: 'hulk', title: '<b>Bold & "quoted"</b>' });
   assert.match(r.html, /<h1>&lt;b&gt;Bold &amp; &quot;quoted&quot;&lt;\/b&gt;<\/h1>/);

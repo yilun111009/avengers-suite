@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Usage: node build-report.mjs <input.json> <output.html> [--plain]
+// Usage: node build-report.mjs <input.json> <output.html> [--plain] [--no-theme]
 // Renders a self-contained HTML flow report (inline SVG diagram, no external requests).
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const [, , inPath, outPath, ...flags] = process.argv;
 if (!inPath || !outPath) {
-  console.error('usage: node build-report.mjs <input.json> <output.html> [--plain]');
+  console.error('usage: node build-report.mjs <input.json> <output.html> [--plain] [--no-theme]');
   process.exit(2);
 }
 const d = JSON.parse(readFileSync(inPath, 'utf8'));
@@ -23,7 +23,8 @@ const audience = KNOWN_AUDIENCES.includes(d.audience) ? d.audience : 'dev';
 const startPlain = flags.includes('--plain') || audience !== 'dev';
 // optional per-hero look; null (no hero, unknown hero, missing or invalid theme) leaves the page exactly as it was
 const pluginDir = process.env.AVENGERS_PLUGIN_DIR ?? fileURLToPath(new URL('../', import.meta.url));
-const theme = themeFor(d.hero, pluginDir);
+// --no-theme builds the plain page from a report that has a hero, without touching its JSON
+const theme = flags.includes('--no-theme') ? null : themeFor(d.hero, pluginDir);
 
 // ---- secret scan: refuse to write a report that appears to contain a credential ----
 const secretHits = scanSecrets(d, '');
